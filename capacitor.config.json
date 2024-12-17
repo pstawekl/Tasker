@@ -1,0 +1,9 @@
+{
+  "appId": "com.tasker.app",
+  "appName": "Tasker",
+  "webDir": "public",
+  "server": {
+    "url": "http://194.88.244.251:3000",
+    "cleartext": true
+  }
+}

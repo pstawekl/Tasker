@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tasker</string>
+    <string name="title_activity_main">Tasker</string>
+    <string name="package_name">com.tasker.app</string>
+    <string name="custom_url_scheme">com.tasker.app</string>
+</resources>

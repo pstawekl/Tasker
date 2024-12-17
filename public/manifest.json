@@ -1,0 +1,36 @@
+{
+    "name": "Tasker",
+    "short_name": "Tasker",
+    "description": "Aplikacja do zarządzania zadaniami",
+    "lang": "en",
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#ffffff",
+    "background_color": "#ffffff",
+    "icons": [
+        {
+            "src": "/logo-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/logo-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshots/screenshot-desktop.png",
+            "sizes": "1918x945",
+            "type": "image/png",
+            "form_factor": "wide"
+        },
+        {
+            "src": "/screenshots/screenshot-mobile.png",
+            "sizes": "411x885",
+            "type": "image/png",
+            "form_factor": "narrow"
+        }
+    ]
+}
