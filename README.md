@@ -18,7 +18,7 @@ The application has a defined Prettier code formatter and ESLint.
 The design of the application was based on TailwindCSS and the Shadcn UI library.
 The user authorization system was based on Auth0.
 
-## Why this application?
+## Why did I create this application?
 
 The application was made as a college credit project.
 
