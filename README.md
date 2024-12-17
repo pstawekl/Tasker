@@ -32,5 +32,8 @@ The application was made as a college credit project.
 
 ### Dashboard
 ![Dashboard view](https://github.com/user-attachments/assets/599a87a5-fdf3-47c5-9342-88553f4f05dd)
+![Dashboard mobile view](https://github.com/user-attachments/assets/56be47e1-791c-4861-b5fe-bce802b0c0de)
+![Dashboard tasks list view](https://github.com/user-attachments/assets/5263cf46-f122-499a-a0ea-8bc20ca3fa89)
+![Dashboardd mobile tasks list view](https://github.com/user-attachments/assets/1a68d37d-cfaa-48f2-ad06-49705fd9b59d)
 
 The application does not generate profit, any copyright material goods used in it are not used to generate revenue, only to learn.
