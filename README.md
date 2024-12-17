@@ -1,24 +1,36 @@
 # Tasker
 Application to manage daily tasks.
 
-## Założenia aplikacji
+## Assumptions of the application
 
-Aplikacja ma umożliwić użytkownikowi w prosty sposób zarządzanie zadaniami w ciągu dnia. 
-Użytkownik ma możliwość tworzenia nielimitowanej ilości list zadań. 
-Każda lista zadań posiada przypisane do siebie zadania.
+The application is designed to allow the user to easily manage tasks throughout the day. 
+The user can create an unlimited number of task lists. 
+Each task list has tasks assigned to it.
 
-## Technologie wykorzystane w aplikacji
+## Technologies used in the application
 
-Aplikacja webowa oparta została na Next.js. 
-Baza danych wykonana została w technologii PostgreSQL.
-Aplikacja webowa może działać jako PWA (Proggressive Web App).
-Za pomocą aplikacji webowej zostały utworzone również aplikacje mobilne na systemy Android oraz IOS poprzez Gradle i XCode.
-Aplikacja posiada zautomatyzawane Workflowy dla GitHuba.
-Aplikacja posiada zdefiniowany formatter kodu Prettier oraz ESLint.
-Design aplikacji został oparty na TailwindCSS oraz bibliotece UI Shadcn.
+The web application was based on Next.js. 
+The database was made using PostgreSQL technology.
+The web application can operate as a PWA (Progressive Web App).
+Using the web application, mobile applications for Android and IOS were also created through Gradle and XCode.
+The application has automated workflowy for GitHub.
+The application has a defined Prettier code formatter and ESLint.
+The design of the application was based on TailwindCSS and the Shadcn UI library.
+The user authorization system was based on Auth0.
 
-## Po co ta aplikacja?
+## Why this application?
 
-Aplikacja została wykonana jako projekt zaliczeniowy na studia.
+The application was made as a college credit project.
 
-## Autorem kodu jest Jakub Stawski.
+## The author of the code is Jakub Stawski.
+
+### Home site
+![Home site view](https://github.com/user-attachments/assets/b8fe1e2e-a675-44bb-a9e7-4797eae4f643)
+
+### Login page
+![Login page view](https://github.com/user-attachments/assets/4bb292e9-7866-468d-8dea-6c94cc74995f)
+
+### Dashboard
+![Dashboard view](https://github.com/user-attachments/assets/599a87a5-fdf3-47c5-9342-88553f4f05dd)
+
+The application does not generate profit, any copyright material goods used in it are not used to generate revenue, only to learn.
