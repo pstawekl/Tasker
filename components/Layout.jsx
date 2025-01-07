@@ -1,9 +1,8 @@
-import React from 'react';
-import { Container } from 'reactstrap';
 import Head from 'next/head';
+import { Container } from 'reactstrap';
 
-import NavBar from './NavBar';
 import Footer from './Footer';
+import NavBar from './NavBar';
 
 const Layout = ({ children }) => (
   <>

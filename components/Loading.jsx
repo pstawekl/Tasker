@@ -1,5 +1,3 @@
-import React from 'react';
-
 const Loading = () => (
   <div className="spinner d-flex align-items-center justify-content-center w-100 h-100" data-testid="loading">
     <svg

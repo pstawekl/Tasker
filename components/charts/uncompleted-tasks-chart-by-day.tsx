@@ -1,15 +1,22 @@
 'use client';
 
+import { auth } from '@/app/firebaseConfig';
+import { ChartContainer, ChartLegendContent, ChartTooltipContent } from '@/components/ui/chart';
 import { useEffect, useState } from 'react';
-import { ChartContainer, ChartTooltipContent, ChartLegendContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { useUser } from '@auth0/nextjs-auth0/client';
 import { Spinner } from 'reactstrap';
+import { Bar, BarChart, CartesianGrid, Legend, Tooltip, XAxis, YAxis } from 'recharts';
 
 export default function UncompletedTasksChartByDay() {
-    const { user } = useUser();
+    const [user, setUser] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (auth && auth.currentUser) {
+            setUser(auth.currentUser);
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchUncompletedTasks = async () => {
@@ -56,11 +63,11 @@ export default function UncompletedTasksChartByDay() {
             desktop: {
                 label: "Desktop",
                 color: "#2563eb",
-              },
-              mobile: {
+            },
+            mobile: {
                 label: "Mobile",
                 color: "#60a5fa",
-              },
+            },
         }}>
             {loading ? (
                 <Spinner />

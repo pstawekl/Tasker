@@ -1,15 +1,20 @@
 'use client';
 
+import { auth } from '@/app/firebaseConfig';
 import { useEffect, useState } from 'react';
-import { ChartContainer, ChartTooltipContent, ChartLegendContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
-import { useUser } from '@auth0/nextjs-auth0/client';
 import { Spinner } from 'reactstrap';
 
 export default function UncompletedTasksChart() {
-    const { user } = useUser();
+    const [user, setUser] = useState(null);
     const [tasks, setTasks] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        if (auth && auth.currentUser) {
+            setUser(auth.currentUser);
+            setLoading(false);
+        }
+    }, []);
 
     useEffect(() => {
         const fetchUncompletedTasks = async () => {

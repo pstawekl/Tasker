@@ -1,8 +1,7 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 
-import { withUserProvider } from '../fixtures';
 import Layout from '../../components/Layout';
+import { withUserProvider } from '../fixtures';
 
 describe('Layout', () => {
   it('should render without crashing', async () => {

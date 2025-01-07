@@ -1,6 +1,5 @@
-import { NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
-import { Task } from '@/lib/models/tasks';
+import { NextResponse } from 'next/server';
 
 export const POST = async (req: Request) => {
     try {

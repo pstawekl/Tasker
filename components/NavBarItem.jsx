@@ -1,6 +1,4 @@
-import React from 'react';
 import { usePathname } from 'next/navigation';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const NavBarItem = ({ children, href, className, icon, tabIndex, testId }) => {
   const pathname = usePathname();

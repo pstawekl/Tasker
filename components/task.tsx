@@ -1,14 +1,14 @@
 'use client'
-import { Task } from "@/lib/models/tasks";
-import { Trash } from "lucide-react";
-import { Checkbox } from "./ui/checkbox";
-import { useEffect, useState } from "react";
-import { Label } from "./ui/label";
-import { Card, CardContent, CardHeader } from "./ui/card";
-import { format } from "date-fns";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Task } from "@/lib/models/tasks";
+import { format } from "date-fns";
+import { Trash } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Container } from "reactstrap";
+import { Card, CardContent, CardHeader } from "./ui/card";
+import { Checkbox } from "./ui/checkbox";
+import { Label } from "./ui/label";
 
 interface TaskComponentProps {
     task: Task;
@@ -95,7 +95,7 @@ export default function TaskComponent(props: TaskComponentProps) {
             onClick={(e) => {
                 console.log((e.target as HTMLInputElement).type);
                 if ((e.target as HTMLInputElement).type !== "button")
-                    router.push(`/task/${task.id}`);
+                    router.push(`/dashboard/task/${task.id}`);
             }}
             className={`cursor-pointer bg-white-500 hover:bg-gray-50 ${isOverdue ? "bg-red-500 hover:bg-red-300" : ""} ${isCompleted ? "bg-green-400 hover:bg-green-300 text-white" : ""}`}
         >

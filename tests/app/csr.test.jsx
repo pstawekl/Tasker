@@ -1,6 +1,5 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
 import { UserProvider } from '@auth0/nextjs-auth0/client';
+import { render, screen } from '@testing-library/react';
 
 import CSRPage from '../../app/csr/page';
 

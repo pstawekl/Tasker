@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+*/node_modules
 /.pnp
 .pnp.js
 
@@ -36,9 +37,20 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 .env.production
+.env
 
 # vercel
 .vercel
 
 # origs
 *.orig
+
+#firebase
+.firebase
+firebase-debug.log
+
+#aider
+.aider*
+
+#idea
+.idea

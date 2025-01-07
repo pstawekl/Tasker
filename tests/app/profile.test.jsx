@@ -1,8 +1,7 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 
-import { withUserProvider, mockUser } from '../fixtures';
 import Profile from '../../app/profile/page';
+import { mockUser, withUserProvider } from '../fixtures';
 
 describe('profile', () => {
   it('should render without crashing', async () => {

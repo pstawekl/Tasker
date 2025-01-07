@@ -1,51 +1,59 @@
 'use  client';
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Collapse,
-  Container,
+  DropdownItem,
+  DropdownMenu,
+  DropdownToggle,
+  Nav,
   Navbar,
   NavbarToggler,
-  NavbarBrand,
-  Nav,
   NavItem,
-  UncontrolledDropdown,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem
+  UncontrolledDropdown
 } from 'reactstrap';
-import { useUser } from '@auth0/nextjs-auth0/client';
+// import { useUser } from '@auth0/nextjs-auth0/client';
 
-import PageLink from './PageLink';
 import AnchorLink from './AnchorLink';
+import PageLink from './PageLink';
 
+import { auth } from '@/app/firebaseConfig';
 import Logo from '@/public/logo.webp';
+import { onAuthStateChanged } from 'firebase/auth';
 import Image from 'next/image';
+import { Button } from './ui/button';
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, isLoading } = useUser();
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      setUser(user);
+      setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
   const toggle = () => setIsOpen(!isOpen);
 
   return (
     <div className="nav-container" data-testid="navbar">
       <Navbar color="light" light expand="sm">
-        <div className='navbar-container-inner d-flex flex-row justify-between w-100 mx-[10%]'>
+        <div className="navbar-container-inner d-flex flex-row justify-between w-100 mx-[10%]">
           <Image src={Logo} alt="Logo" width={40} height={40} />
           <NavbarToggler onClick={toggle} data-testid="navbar-toggle" />
           <Collapse isOpen={isOpen} navbar>
-            <Nav className="mr-auto" navbar data-testid="navbar-items">
-
-            </Nav>
+            <Nav className="mr-auto" navbar data-testid="navbar-items"></Nav>
             <Nav className="d-none d-md-block" navbar>
               {!isLoading && !user && (
-                <NavItem id="qsLoginBtn">
-                  <AnchorLink
-                    href="/api/auth/login"
-                    className="btn btn-secondary btn-margin"
-                    tabIndex={0}
-                    testId="navbar-login-desktop">
-                    Zaloguj
+                <NavItem id="qsLoginBtn" className="flex gap-2">
+                  <AnchorLink href="/login" tabIndex={0} testId="navbar-login-mobile">
+                    <Button variant="black">Zaloguj</Button>
+                  </AnchorLink>
+                  <AnchorLink href="/register" tabIndex={0} testId="navbar-login-mobile">
+                    <Button variant="outline">Zarejestruj</Button>
                   </AnchorLink>
                 </NavItem>
               )}
@@ -67,7 +75,7 @@ const NavBar = () => {
                       {user.nickname}
                     </DropdownItem>
                     <DropdownItem className="dropdown-profile" tag="span">
-                      <PageLink href="/profile" icon="user" testId="navbar-profile-desktop">
+                      <PageLink href="/dashboard/profile" icon="user" testId="navbar-profile-desktop">
                         Profil
                       </PageLink>
                     </DropdownItem>
@@ -88,11 +96,18 @@ const NavBar = () => {
             {!isLoading && !user && (
               <Nav className="d-md-none" navbar>
                 <AnchorLink
-                  href="/api/auth/login"
+                  href="/login"
                   className="btn btn-primary btn-block"
                   tabIndex={0}
                   testId="navbar-login-mobile">
                   Zaloguj
+                </AnchorLink>
+                <AnchorLink
+                  href="/register"
+                  className="btn btn-secondary btn-block"
+                  tabIndex={0}
+                  testId="navbar-login-mobile">
+                  Zarejestruj
                 </AnchorLink>
               </Nav>
             )}
@@ -119,7 +134,7 @@ const NavBar = () => {
                   </span>
                 </NavItem>
                 <NavItem>
-                  <PageLink href="/profile" icon="user" testId="navbar-profile-mobile">
+                  <PageLink href="/dashboard/profile" icon="user" testId="navbar-profile-mobile">
                     Profil
                   </PageLink>
                 </NavItem>

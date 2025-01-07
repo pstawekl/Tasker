@@ -1,8 +1,7 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 
-import { withUserProvider, mockUser } from '../fixtures';
 import NavBar from '../../components/NavBar';
+import { mockUser, withUserProvider } from '../fixtures';
 
 describe('NavBar', () => {
   it('should render in logged out state', async () => {
