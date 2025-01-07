@@ -1,0 +1,14 @@
+"use strict";(()=>{var e={};e.id=926,e.ids=[926],e.modules={30517:e=>{e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},25912:(e,r,t)=>{t.r(r),t.d(r,{headerHooks:()=>E,originalPathname:()=>l,requestAsyncStorage:()=>u,routeModule:()=>d,serverHooks:()=>p,staticGenerationAsyncStorage:()=>c,staticGenerationBailout:()=>m});var s={};t.r(s),t.d(s,{DELETE:()=>DELETE,POST:()=>POST,PUT:()=>PUT}),t(78976);var n=t(10884),o=t(16132),a=t(46837),i=t(95798);let POST=async e=>{try{let{task_id:r,reminder_time:t}=await e.json(),s=`
+            INSERT INTO reminders (task_id, reminder_time)
+            VALUES ($1, $2)
+            RETURNING *;
+        `,n=await (0,a.J)(s,[r,t]);return i.Z.json(n.rows[0],{status:201})}catch(e){return console.error("Error adding reminder:",e),i.Z.json({error:"Error adding reminder"},{status:500})}},PUT=async e=>{try{let{id:r,reminder_time:t}=await e.json(),s=`
+            UPDATE reminders
+            SET reminder_time = $1
+            WHERE id = $2
+            RETURNING *;
+        `,n=await (0,a.J)(s,[t,r]);if(0===n.rowCount)return i.Z.json({error:"Reminder not found"},{status:404});return i.Z.json(n.rows[0],{status:200})}catch(e){return console.error("Error editing reminder:",e),i.Z.json({error:"Error editing reminder"},{status:500})}},DELETE=async e=>{try{let{id:r}=await e.json(),t=`
+            DELETE FROM reminders
+            WHERE id = $1
+            RETURNING *;
+        `,s=await (0,a.J)(t,[r]);if(0===s.rowCount)return i.Z.json({error:"Reminder not found"},{status:404});return i.Z.json({message:"Reminder deleted successfully"},{status:200})}catch(e){return console.error("Error deleting reminder:",e),i.Z.json({error:"Error deleting reminder"},{status:500})}},d=new n.AppRouteRouteModule({definition:{kind:o.x.APP_ROUTE,page:"/api/postgres/reminders/route",pathname:"/api/postgres/reminders",filename:"route",bundlePath:"app/api/postgres/reminders/route"},resolvedPagePath:"C:\\Users\\STW\\OneDrive\\Dokumenty\\VSC Projects\\Tasker-For-Firebase\\app\\api\\postgres\\reminders\\route.ts",nextConfigOutput:"",userland:s}),{requestAsyncStorage:u,staticGenerationAsyncStorage:c,serverHooks:p,headerHooks:E,staticGenerationBailout:m}=d,l="/api/postgres/reminders/route"},46837:(e,r,t)=>{t.d(r,{J:()=>executeQuery});let s=require("pg"),n={user:process.env.DB_USER,password:process.env.DB_PASSWORD,host:process.env.DB_HOST,database:process.env.DB_NAME,port:parseInt(process.env.DB_PORT,10),ssl:!1},o=new s.Pool(n);async function executeQuery(e,r){try{let t=await o.connect(),s=await t.query(e,r);return t.release(),s}catch(e){throw console.error("Błąd zapytania do bazy danych:",e),e}}}};var r=require("../../../../webpack-runtime.js");r.C(e);var __webpack_exec__=e=>r(r.s=e),t=r.X(0,[955],()=>__webpack_exec__(25912));module.exports=t})();
