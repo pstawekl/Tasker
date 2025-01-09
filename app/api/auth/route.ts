@@ -1,19 +1,20 @@
 import { executeQuery } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { checkTokenFromRequest } from '../utils/firebaseAdmin';
 
 export async function POST(req) {
   try {
-    console.log('on the server');
+    const isTokenValid = await checkTokenFromRequest(req);
+
+    if (!isTokenValid) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
 
     const { firebaseId, email, username, createdAt, picture } = await req.json();
-
-    console.log('after req.body', { firebaseId, email, username, createdAt, picture });
 
     const checkQuery = `SELECT * FROM users WHERE firebase_id = $1`;
     let checkResult = await executeQuery(checkQuery, [firebaseId]);
     let dbUser = checkResult.rows[0];
-
-    console.log('after checkQuery');
 
     if (!dbUser) {
       const insertQuery = `
@@ -26,7 +27,9 @@ export async function POST(req) {
       dbUser = checkResult.rows[0];
     }
 
-    console.log('after insertQuery');
+    if (!dbUser) {
+      return NextResponse.json({ error: 'Error creating user' }, { status: 500 });
+    }
 
     return NextResponse.json({ user: dbUser }, { status: 200 });
   } catch (error) {

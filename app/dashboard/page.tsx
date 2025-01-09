@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { User } from "firebase/auth";
 import { useEffect, useState } from "react";
+import DefaultUserAvatar from '@/public/default-user-avatar.jpg';
+import Image from "next/image";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User>(null);
@@ -30,7 +32,7 @@ export default function Dashboard() {
             <CardTitle className="overflow-hidden pb-1 text-ellipsis">Witaj, {user && user.displayName ? user.displayName : user.email}!</CardTitle>
           </CardHeader>
           <CardContent className="d-flex flex-column justify-center items-center">
-            <img src={user.photoURL} alt={user && user.displayName ? user.displayName : user.email} width={100} height={100} className="rounded-full" />
+            <Image src={user.photoURL ?? DefaultUserAvatar} alt={user && user.displayName ? user.displayName : user.email} width={100} height={100} className="rounded-full" />
             <Label className="mt-4 text-center">Ostatnia aktualizacja profilu: {new Date(user.metadata.lastSignInTime).toLocaleDateString()}</Label>
             <Label className="mt-2 text-center">Zweryfikowany użytkownik: {user.emailVerified ? 'Tak' : 'Nie'}</Label>
           </CardContent>

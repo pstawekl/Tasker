@@ -1,21 +1,29 @@
 'use client';
 
+import { auth } from '@/app/firebaseConfig';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Reminders } from '@/lib/models/reminders';
+import { Task } from '@/lib/models/tasks';
+import { faArrowLeft, faBell, faCheck, faClose, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Task } from '@/lib/models/tasks';
-import { Reminder, Reminders } from '@/lib/models/reminders';
 import { Spinner } from 'reactstrap';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Calendar } from '@/components/ui/calendar';
-import { Label } from '@/components/ui/label';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faBell, faCheck, faClose, faPen, faPlusCircle, faPlusMinus, faRing, faTrash } from '@fortawesome/free-solid-svg-icons';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+
+type TaskError = {
+    message: string;
+    isError: boolean;
+}
 
 export default function TaskPage() {
+    const [user, setUser] = useState<User>(null);
     const { taskId } = useParams();
     const { register, handleSubmit, reset, setValue, watch } = useForm();
     const router = useRouter();
@@ -27,6 +35,17 @@ export default function TaskPage() {
     const [isAddReminderDialogOpen, setIsAddReminderDialogOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string>('');
+    const [taskError, setTaskError] = useState<TaskError>({ isError: false, message: '' });
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user);
+            if (task)
+                setLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         const fetchTask = async () => {
@@ -34,6 +53,7 @@ export default function TaskPage() {
                 const response = await fetch(`/api/postgres/get-task`, {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${await user.getIdToken()}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ taskId: taskId }),
@@ -42,17 +62,17 @@ export default function TaskPage() {
                     const data = await response.json();
                     setTask(data.task);
                 } else {
-                    console.error('Failed to fetch task');
+                    setTaskError({ isError: true, message: 'Błąd podczas pobierania zadania.' });
                 }
             } catch (error) {
-                console.error('Error fetching task:', error);
+                setTaskError({ isError: true, message: 'Błąd podczas pobierania zadania.' });
             } finally {
                 setLoading(false);
             }
         };
 
         if (!taskId || isNaN(Number(taskId))) {
-            console.error('Brak taskId');
+            setTaskError({ isError: true, message: 'Brak task Id' });
             setLoading(false);
             setTimeout(() => router.push('/'), 5000);
             return;
@@ -63,6 +83,7 @@ export default function TaskPage() {
                 const response = await fetch(`/api/postgres/get-reminders`, {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${await user.getIdToken()}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ task_id: taskId }),
@@ -71,16 +92,18 @@ export default function TaskPage() {
                     const data = await response.json();
                     setReminders(data.reminders as Reminders);
                 } else {
-                    console.error('Failed to fetch reminders');
+                    setTaskError({ isError: true, message: 'Błąd podczas pobierania przypomnień.' });
                 }
             } catch (error) {
-                console.error('Error fetching reminders:', error);
+                setTaskError({ isError: true, message: 'Błąd podczas pobierania przypomnień.' });
             }
         };
 
-        fetchTask();
-        fetchReminders();
-    }, [taskId]);
+        if (user) {
+            fetchTask();
+            fetchReminders();
+        }
+    }, [taskId, user]);
 
     useEffect(() => {
         if (selectedDate) {
@@ -89,13 +112,6 @@ export default function TaskPage() {
         }
     }, [selectedDate])
 
-    if (loading) {
-        return <Spinner />;
-    }
-
-    if (!task) {
-        return <div>Task not found</div>;
-    }
 
     const addReminder = async () => {
         const date = watch('reminder_date') as string;
@@ -106,6 +122,7 @@ export default function TaskPage() {
             const response = await fetch('/api/postgres/reminders', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${await user.getIdToken()}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
@@ -130,6 +147,7 @@ export default function TaskPage() {
             const response = await fetch('/api/postgres/reminders', {
                 method: 'PUT',
                 headers: {
+                    'Authorization': `Bearer ${await user.getIdToken()}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
@@ -154,6 +172,7 @@ export default function TaskPage() {
             const response = await fetch('/api/postgres/reminders', {
                 method: 'DELETE',
                 headers: {
+                    'Authorization': `Bearer ${await user.getIdToken()}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ id }),
@@ -181,14 +200,18 @@ export default function TaskPage() {
     const handleKeyDown = async (event: React.KeyboardEvent, field: string) => {
         if (event.key === 'Enter') {
             try {
-                const response = await fetch('/api/postgres/update-task', {
+                const token = await auth.currentUser.getIdToken();
+                const response = await fetch('/api/postgres/edit-task', {
                     method: 'PUT',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        taskId: taskId,
-                        [field]: editValue[field],
+                        id: taskId,
+                        title: editValue['title'],
+                        description: editValue['description'],
+                        due_date: editValue['due_date'],
                     }),
                 });
 
@@ -207,7 +230,24 @@ export default function TaskPage() {
         }
     };
 
-    return (
+    if (loading) {
+        return <Spinner />;
+    }
+
+    if (!task && !loading) {
+        setTaskError({ isError: true, message: 'Zadanie nie istnieje' });
+    }
+
+    if (!user && !loading) {
+        setTaskError({ isError: true, message: 'Błąd autoryzacji' });
+    }
+
+    if (taskError.isError) {
+        return <div className='bg-red-500 text-white p-5 rounded-lg'>
+            <div className='text-2xl'></div>
+            <div>{taskError.message}</div>
+        </div>;
+    } else return (
         <div className='p-5 w-full d-flex flex-row justify-stretch gap-5'>
             <Card className='w-full h-full'>
                 <CardHeader className='w-full d-flex flex-row gap-3 items-center'>

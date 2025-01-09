@@ -12,7 +12,6 @@ import {
   NavItem,
   UncontrolledDropdown
 } from 'reactstrap';
-// import { useUser } from '@auth0/nextjs-auth0/client';
 
 import AnchorLink from './AnchorLink';
 import PageLink from './PageLink';
@@ -27,8 +26,10 @@ const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     const unsubscribe = onAuthStateChanged(auth, user => {
       setUser(user);
       setIsLoading(false);
@@ -36,7 +37,13 @@ const NavBar = () => {
 
     return () => unsubscribe();
   }, []);
+
   const toggle = () => setIsOpen(!isOpen);
+
+  // Nie renderuj wrażliwych elementów przed montażem komponentu
+  if (!isMounted) {
+    return <div className="nav-container" data-testid="navbar"></div>;
+  }
 
   return (
     <div className="nav-container" data-testid="navbar">

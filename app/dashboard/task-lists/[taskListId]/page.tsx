@@ -24,6 +24,12 @@ enum TaskSortingType {
     byTitleDesc = "Po tytule zadania malejąco",
 }
 
+
+type TaskListPageError = {
+    isError: boolean;
+    message: string;
+}
+
 export default function TaskListPage() {
     const [user, setUser] = useState(null);
     const [isLoading, setLoading] = useState(true);
@@ -34,6 +40,7 @@ export default function TaskListPage() {
     const { register, watch, reset, setValue } = useForm();
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [taskList, setTaskList] = useState<TaskList | null>(null);
+    const [isTaskListError, setIsTaskListError] = useState<TaskListPageError>({ isError: false, message: '' });
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -45,54 +52,64 @@ export default function TaskListPage() {
     }, []);
 
     const fetchTasks = async () => {
-        try {
-            setIsTasksLoading(true);
-            const response = await fetch(`/api/postgres/get-tasks`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ taskListId: taskListId }),
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setTasks(data.tasks);
-                setIsTasksLoading(false);
-            } else {
-                console.error('Failed to fetch tasks');
+        if (user) {
+            try {
+                setIsTasksLoading(true);
+                const token = await user.getIdToken();
+                const response = await fetch(`/api/postgres/get-tasks`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ taskListId: taskListId }),
+                });
+                if (response.ok) {
+                    const { tasks } = await response.json();
+                    setTasks(tasks);
+                    setIsTasksLoading(false);
+                } else {
+                    setIsTaskListError({ isError: true, message: 'Failed to fetch tasks' });
+                }
+            } catch (error) {
+                setIsTaskListError({ isError: true, message: error });
             }
-        } catch (error) {
-            console.log('Error fetching tasks:', error);
         }
     }
 
     useEffect(() => {
         const fetchTaskList = async () => {
             try {
+                const token = await user.getIdToken();
                 const response = await fetch(`/api/postgres/get-task-list`, {
                     method: 'POST',
                     headers: {
+                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ list_id: taskListId }),
                 });
                 if (response.ok) {
-                    const data = await response.json();
-                    setTaskList(data.taskList);
+                    const { taskList } = await response.json();
+                    setTaskList(taskList);
                 } else {
-                    console.error('Failed to fetch task list');
+                    setIsTaskListError({ isError: true, message: 'Failed to fetch task list' });
                 }
             } catch (error) {
-                console.log('Error fetching task list:', error);
+                setIsTaskListError({ isError: true, message: 'Error fetching task list' });
             }
+
         }
 
-        fetchTaskList();
-    }, [])
+        if (user) {
+            fetchTaskList();
+        }
+    }, [user])
 
     useEffect(() => {
         if (taskList) {
             document.title = taskList.name;
+            fetchTasks();
         }
     }, [taskList])
 
@@ -137,6 +154,7 @@ export default function TaskListPage() {
             const response = await fetch('/api/postgres/add-task', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${await user.getIdToken()}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
@@ -152,10 +170,10 @@ export default function TaskListPage() {
                 refreshGrid();
                 reset();
             } else {
-                console.error('Failed to add task');
+                setIsTaskListError({ isError: true, message: 'Failed to add task' });
             }
         } catch (error) {
-            console.error('Error adding task:', error);
+            setIsTaskListError({ isError: true, message: error });
         }
     }
 
@@ -163,9 +181,12 @@ export default function TaskListPage() {
         <div className="p-4 d-flex flex-column gap-3 max-h-[95vh] w-full h-full overflow-hidden">
             <Dialog>
                 <DialogTrigger asChild>
-                    <Button variant="outline" className="w-min" title="Dodaj zadanie">
-                        <Plus />
-                    </Button>
+                    {
+                        !isTaskListError.isError && !isTasksLoading && tasks &&
+                        <Button variant="outline" className="w-min" title="Dodaj zadanie">
+                            <Plus />
+                        </Button>
+                    }
                 </DialogTrigger>
                 <DialogContent className="w-[100vw] h-[100vh] d-flex flex-column md:w-auto md:h-auto md:min-w-[30%]">
                     <DialogHeader className="d-flex flex-row items-center">
@@ -197,26 +218,28 @@ export default function TaskListPage() {
                     </form>
                 </DialogContent>
             </Dialog>
-            <div className="mb-3">
-                <Label htmlFor="sorting" className="form-label ">Sortuj według:</Label>
-                <Select
-                    value={taskSortingType}
-                    onValueChange={(value) => setTaskSortingType(value as TaskSortingType)}
-                >
-                    <SelectTrigger>
-                        <SelectValue placeholder={TaskSortingType.byDueDateOlder} />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value={TaskSortingType.byDueDateOlder}>{TaskSortingType.byDueDateOlder}</SelectItem>
-                        <SelectItem value={TaskSortingType.byDueDateLatest}>{TaskSortingType.byDueDateLatest}</SelectItem>
-                        <SelectItem value={TaskSortingType.byTitleAsc}>{TaskSortingType.byTitleAsc}</SelectItem>
-                        <SelectItem value={TaskSortingType.byTitleDesc}>{TaskSortingType.byTitleDesc}</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
             {
-                isTasksLoading ?
-                    <TaskListSkeleton /> :
+                !isTasksLoading && !isTaskListError.isError && tasks && <div className="mb-3">
+                    <Label htmlFor="sorting" className="form-label ">Sortuj według:</Label>
+                    <Select
+                        value={taskSortingType}
+                        onValueChange={(value) => setTaskSortingType(value as TaskSortingType)}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder={TaskSortingType.byDueDateOlder} />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={TaskSortingType.byDueDateOlder}>{TaskSortingType.byDueDateOlder}</SelectItem>
+                            <SelectItem value={TaskSortingType.byDueDateLatest}>{TaskSortingType.byDueDateLatest}</SelectItem>
+                            <SelectItem value={TaskSortingType.byTitleAsc}>{TaskSortingType.byTitleAsc}</SelectItem>
+                            <SelectItem value={TaskSortingType.byTitleDesc}>{TaskSortingType.byTitleDesc}</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+            }
+            {
+                isTasksLoading && !isTaskListError ?
+                    <div className="w-100 h-100 flex justify-center items-center"><TaskListSkeleton /></div> :
                     <div className="overflow-y-scroll overflow-x-hidden h-auto gap-3 d-flex flex-column">
                         {
                             tasks && sortTasks(tasks).map((task) => (
@@ -229,6 +252,13 @@ export default function TaskListPage() {
                             ))
                         }
                     </div>
+            }
+            {
+                isTaskListError.isError &&
+                <div className="bg-red-500 text-white p-3 rounded-md">
+                    <div className="text-2xl text-normal">Nie udało się pobrać listy zadań</div>
+                    <div className="text-lg">{isTaskListError.message}</div>
+                </div>
             }
         </div>
     );

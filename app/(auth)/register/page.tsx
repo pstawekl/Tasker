@@ -35,11 +35,11 @@ export default function RegisterPage() {
                 throw new Error('No user ID available');
             }
 
-            console.log('Firebase UID:', user.uid); // Debugging
-
+            const token = await user.getIdToken();
             const response = await fetch('/api/auth', {
                 method: 'POST',
                 headers: {
+                    'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({

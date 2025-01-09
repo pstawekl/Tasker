@@ -2,7 +2,9 @@
 import { auth } from '@/app/firebaseConfig';
 import Loading from '@/components/Loading';
 import { User as DbUser } from '@/lib/models/users';
+import DefaultUserAvatar from '@/public/default-user-avatar.jpg';
 import { User } from 'firebase/auth';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { Col, Row } from 'reactstrap';
 
@@ -52,8 +54,8 @@ export default function Profile() {
         <>
           <Row className="align-items-center profile-header mb-5 text-center text-md-left" data-testid="profile">
             <Col md={2}>
-              <img
-                src={user.photoURL || '/default-profile.png'}
+              <Image
+                src={user.photoURL || DefaultUserAvatar}
                 alt="Profile"
                 className="rounded-circle img-fluid profile-picture mb-3 mb-md-0"
                 data-testid="profile-picture"

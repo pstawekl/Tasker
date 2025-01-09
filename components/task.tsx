@@ -1,7 +1,9 @@
 'use client'
+import { auth } from "@/app/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Task } from "@/lib/models/tasks";
 import { format } from "date-fns";
+import { onAuthStateChanged } from "firebase/auth";
 import { Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,6 +11,7 @@ import { Container } from "reactstrap";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
+import { Skeleton } from "./ui/skeleton";
 
 interface TaskComponentProps {
     task: Task;
@@ -16,11 +19,21 @@ interface TaskComponentProps {
 }
 
 export default function TaskComponent(props: TaskComponentProps) {
+    const [user, setUser] = useState(null);
     const [isCompleted, setIsCompleted] = useState(false);
     const [displayText, setDisplayText] = useState('');
     const [isOverdue, setIsOverdue] = useState(false);
     const [task, setTask] = useState<Task | null>(props.task);
+    const [isDuringCheckboxChange, setIsDuringCheckboxChange] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user);
+        });
+
+        return () => unsubscribe();
+    }, []);
 
     useEffect(() => {
         setIsCompleted(Boolean(task.is_completed));
@@ -48,12 +61,15 @@ export default function TaskComponent(props: TaskComponentProps) {
     }, [task]);
 
     const handleCheckboxChange = async () => {
+        setIsDuringCheckboxChange(true);
         const newIsCompleted = !isCompleted;
         setIsCompleted(newIsCompleted);
         try {
+            const token = await user.getIdToken();
             const response = await fetch(`/api/postgres/manage-task-status`, {
                 method: 'POST',
                 headers: {
+                    "Authorization": `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ taskId: task.id, isCompleted: !isCompleted }),
@@ -65,11 +81,13 @@ export default function TaskComponent(props: TaskComponentProps) {
                     props.refreshGrid();
                 }
             } else {
-                console.error('Failed to finish task');
+                const { error } = await response.json();
+                console.error(response.status, 'Failed to finish task: ', error);
             }
         } catch (error) {
             console.error('Error finishing task:', error);
         }
+        setIsDuringCheckboxChange(false);
     };
 
     const handleDelete = async () => {
@@ -77,6 +95,7 @@ export default function TaskComponent(props: TaskComponentProps) {
             const response = await fetch(`/api/postgres/delete-task`, {
                 method: 'DELETE',
                 headers: {
+                    'Authorization': `Bearer ${await user.getIdToken()}`,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ id: task.id }),
@@ -90,6 +109,11 @@ export default function TaskComponent(props: TaskComponentProps) {
             console.error('Error deleting task:', error);
         }
     };
+
+    if (isDuringCheckboxChange) return <div key={task.id} className="flex space-x-2">
+        <Skeleton className="h-[150px] flex-1" />
+    </div>
+
     return (
         <Card
             onClick={(e) => {
