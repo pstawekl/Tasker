@@ -2,7 +2,7 @@
 
 import { auth } from '@/app/firebaseConfig';
 import { useEffect, useState } from 'react';
-import { Spinner } from 'reactstrap';
+import { Skeleton } from '../ui/skeleton';
 
 export default function UncompletedTasksChart() {
     const [user, setUser] = useState(null);
@@ -12,7 +12,6 @@ export default function UncompletedTasksChart() {
     useEffect(() => {
         if (auth && auth.currentUser) {
             setUser(auth.currentUser);
-            setLoading(false);
         }
     }, []);
 
@@ -24,7 +23,7 @@ export default function UncompletedTasksChart() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ auth0_id: user.sub }),
+                    body: JSON.stringify({ firebase_id: user.uid }),
                 });
 
                 if (response.ok) {
@@ -47,7 +46,7 @@ export default function UncompletedTasksChart() {
     }, [user]);
 
     if (loading) {
-        return <Spinner />;
+        return <Skeleton className='w-full h-[200px]' />;
     }
 
     return (

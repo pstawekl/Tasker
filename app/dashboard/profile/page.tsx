@@ -48,37 +48,37 @@ export default function Profile() {
   }, [user]);
 
   return (
-    <>
+    <div className="container mx-auto p-4">
       {isLoading && <Loading />}
       {user && (
         <>
-          <Row className="align-items-center profile-header mb-5 text-center text-md-left" data-testid="profile">
-            <Col md={2}>
+          <div className="flex flex-col md:flex-row items-center md:items-start mb-5 text-center md:text-left" data-testid="profile">
+            <div className="md:w-1/4 mb-4 md:mb-0">
               <Image
                 src={user.photoURL || DefaultUserAvatar}
                 alt="Profile"
-                className="rounded-circle img-fluid profile-picture mb-3 mb-md-0"
+                className="rounded-full img-fluid profile-picture"
                 data-testid="profile-picture"
+                width={100}
+                height={100}
               />
-            </Col>
-            <Col md>
-              <h2 data-testid="profile-name">{user.email}</h2>
-              <p className="lead text-muted" data-testid="profile-email">
+            </div>
+            <div className="md:w-3/4">
+              <h2 className="text-2xl font-bold" data-testid="profile-name">{user.email}</h2>
+              <p className="text-lg text-gray-600" data-testid="profile-email">
                 {user.email}
               </p>
-            </Col>
-          </Row>
+            </div>
+          </div>
           {dbUser && (
-            <Row className="mb-5">
-              <Col>
-                <p>ID: {dbUser.id}</p>
-                <p>Username: {dbUser.username}</p>
-                <p>Created At: {new Date(dbUser.created_at).toLocaleString()}</p>
-              </Col>
-            </Row>
+            <div className="bg-white shadow-md rounded p-4 mb-5">
+              <p className="text-lg"><span className="font-semibold">ID:</span> {dbUser.id}</p>
+              <p className="text-lg"><span className="font-semibold">Username:</span> {dbUser.username}</p>
+              <p className="text-lg"><span className="font-semibold">Created At:</span> {new Date(dbUser.created_at).toLocaleString()}</p>
+            </div>
           )}
         </>
       )}
-    </>
+    </div>
   );
 }

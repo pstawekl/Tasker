@@ -3,7 +3,7 @@
 import { auth, googleProvider } from '@/app/firebaseConfig';
 import { Button } from '@/components/ui/button';
 import Logo from '@/public/logo.webp';
-import { createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithPopup, User } from 'firebase/auth';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -17,13 +17,44 @@ export default function RegisterPage() {
     const handleGoogleSignIn = async () => {
         try {
             const result = await signInWithPopup(auth, googleProvider);
-            if (result.user) {
-                router.push('/dashboard');
+
+            if (!result.user || !result.user.uid) {
+                throw new Error('No user available after Google sign-in');
             }
+
+            await addUserToDatabase(result.user);
+            router.push('/dashboard');
         } catch (error) {
             console.error('Error signing in with Google:', error);
         }
     };
+
+    const addUserToDatabase = async (user: User) => {
+        const token = await user.getIdToken();
+        const response = await fetch('/api/auth', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                firebaseId: user.uid,
+                email: user.email || email,
+                username: user.displayName || '',
+                createdAt: new Date().toISOString(),
+                picture: user.photoURL || ''
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to create user in database');
+        }
+
+        const data = await response.json();
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -35,29 +66,8 @@ export default function RegisterPage() {
                 throw new Error('No user ID available');
             }
 
-            const token = await user.getIdToken();
-            const response = await fetch('/api/auth', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    firebaseId: user.uid,
-                    email: user.email || email,
-                    username: user.displayName || '',
-                    createdAt: new Date().toISOString(),
-                    picture: user.photoURL || ''
-                })
-            });
+            addUserToDatabase(user);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to create user in database');
-            }
-
-            const data = await response.json();
-            localStorage.setItem('user', JSON.stringify(data.user));
             router.push('/dashboard');
         } catch (err: any) {
             console.error('Registration error:', err);

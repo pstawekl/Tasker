@@ -20,11 +20,18 @@ function Hero() {
         Aplikacja do zarządzania zadaniami w ciągu dnia.
       </p>
       {!user && !loading ? (
-        <AnchorLink href="/login">
-          <Button variant="black" className="text-white">
-            Zaloguj
-          </Button>
-        </AnchorLink>
+        <div className="flex flex-col lg:flex-row gap-3">
+          <AnchorLink href="/login">
+            <Button variant="black" className="w-[200px] text-white">
+              Zaloguj
+            </Button>
+          </AnchorLink>
+          <AnchorLink href="/register">
+            <Button variant="black" className="w-[200px] text-white">
+              Zarejestruj
+            </Button>
+          </AnchorLink>
+        </div>
       ) : (
         <Spinner />
       )}

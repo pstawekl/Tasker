@@ -1,10 +1,12 @@
 'use client';
 import { auth } from '@/app/firebaseConfig';
-import { Button } from "@/components/ui/button";
+import LoadingSpinner from '@/components/loadingSpinner';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Skeleton } from '@/components/ui/skeleton';
 import { TaskLists } from "@/lib/models/taskList";
 import { User as DbUser } from '@/lib/models/users';
 import DefaultUserAvatar from '@/public/default-user-avatar.jpg';
@@ -16,13 +18,17 @@ import { ChevronDown, ChevronUp, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from 'next/link';
 import { ReactNode, useEffect, useState } from 'react';
-import { Spinner } from 'reactstrap';
 
 interface LayoutProps {
     children: ReactNode;
 }
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state';
+
+type IsDuringDeleteListType = {
+    isDeleting: boolean;
+    id: number | null;
+}
 
 export default function Layout({ children }: LayoutProps) {
     const [user, setUser] = useState<User | null>(null);
@@ -34,6 +40,9 @@ export default function Layout({ children }: LayoutProps) {
     const [isSidebarLoaded, setIsSidebarLoaded] = useState(false);
     const [newListName, setNewListName] = useState<string>('');
     const [isMounted, setIsMounted] = useState(false);
+    const [isChildrenLoading, setIsChildrenLoading] = useState(true);
+    const [isDuringAddList, setIsDuringAddList] = useState(false);
+    const [isDuringDeleteList, setIsDuringDeleteList] = useState<IsDuringDeleteListType>({ isDeleting: false, id: null });
 
     useEffect(() => {
         setIsMounted(true);
@@ -49,6 +58,10 @@ export default function Layout({ children }: LayoutProps) {
 
         return () => unsubscribe();
     }, []);
+
+    useEffect(() => {
+        setIsChildrenLoading(false);
+    }, [children]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -88,6 +101,7 @@ export default function Layout({ children }: LayoutProps) {
                 });
                 if (response.ok) {
                     const data = await response.json();
+                    console.log(data.users[0])
                     setDbUser(data.users[0]);
                 } else {
                     console.error('Failed to fetch user');
@@ -121,10 +135,13 @@ export default function Layout({ children }: LayoutProps) {
             if (response.ok) {
                 const data = await response.json();
                 setTaskList(data.taskLists);
+                setIsDuringDeleteList({ isDeleting: false, id: null });
             } else {
                 console.error('Failed to fetch task list');
+                setIsDuringDeleteList({ isDeleting: false, id: null });
             }
         } catch (error) {
+            setIsDuringDeleteList({ isDeleting: false, id: null });
             console.error('Error fetching task list:', error);
         }
     };
@@ -137,6 +154,7 @@ export default function Layout({ children }: LayoutProps) {
 
     async function addNewList() {
         if (newListName.length > 2) {
+            setIsDuringAddList(true);
             const response = await fetch('/api/postgres/add-new-task-list', {
                 method: 'POST',
                 headers: {
@@ -150,6 +168,7 @@ export default function Layout({ children }: LayoutProps) {
                 setIsAddingNewList(false);
                 fetchItems();
                 setNewListName('');
+                setIsDuringAddList(false);
             } else {
                 console.error('Failed to add new task list');
             }
@@ -157,6 +176,7 @@ export default function Layout({ children }: LayoutProps) {
     }
 
     async function removeList(id: number) {
+        setIsDuringDeleteList({ isDeleting: true, id: id });
         const response = await fetch('/api/postgres/remove-task-list', {
             method: 'POST',
             headers: {
@@ -170,6 +190,7 @@ export default function Layout({ children }: LayoutProps) {
             fetchItems();
         } else {
             console.error('Failed to remove task list');
+            setIsDuringDeleteList({ isDeleting: false, id: null });
         }
     }
 
@@ -201,7 +222,7 @@ export default function Layout({ children }: LayoutProps) {
     }
 
     if (!user || loading) {
-        return <div className="w-full h-full flex items-center justify-center"><Spinner /></div>;
+        return <div className="w-full h-full flex items-center justify-center"><LoadingSpinner /></div>;
     }
 
     return (
@@ -232,17 +253,23 @@ export default function Layout({ children }: LayoutProps) {
                                                 <SidebarGroupContent>
                                                     <SidebarMenu>
                                                         {taskList.map((item) => (
-                                                            <SidebarMenuItem className="d-flex flex-row" key={item.id}>
-                                                                <SidebarMenuButton className="d-flex flex-row w-100" asChild>
-                                                                    <Link className="text-black hover:no-underline" href={`/dashboard/task-lists/${item.id}`}>
-                                                                        <SidebarGroupLabel>{item.name}</SidebarGroupLabel>
-                                                                    </Link>
-                                                                </SidebarMenuButton>
-                                                                <SidebarMenuButton className="w-min">
-                                                                    <Button className="w-min" variant="ghost" onClick={() => removeList(item.id)}><FontAwesomeIcon icon={faTrash} /></Button>
-                                                                </SidebarMenuButton>
-                                                            </SidebarMenuItem>
+                                                            isDuringDeleteList.isDeleting && isDuringDeleteList.id === item.id ?
+                                                                <Skeleton key={item.id} className='w-full h-[32px]' />
+                                                                :
+                                                                <SidebarMenuItem className="d-flex flex-row" key={item.id}>
+                                                                    <SidebarMenuButton className="d-flex flex-row w-100" asChild>
+                                                                        <Link className="text-black hover:no-underline" href={`/dashboard/task-lists/${item.id}`}>
+                                                                            <SidebarGroupLabel>{item.name}</SidebarGroupLabel>
+                                                                        </Link>
+                                                                    </SidebarMenuButton>
+                                                                    <SidebarMenuButton className="w-min">
+                                                                        <Button className="w-min" variant="ghost" onClick={() => removeList(item.id)}><FontAwesomeIcon icon={faTrash} /></Button>
+                                                                    </SidebarMenuButton>
+                                                                </SidebarMenuItem>
                                                         ))}
+                                                        {
+                                                            isDuringAddList && <Skeleton className='w-full h-[20px]' />
+                                                        }
                                                     </SidebarMenu>
                                                 </SidebarGroupContent>
                                             </CollapsibleContent>
@@ -264,10 +291,11 @@ export default function Layout({ children }: LayoutProps) {
                                                         <Input
                                                             id="add-new-list"
                                                             type="text"
-                                                            className="m-0 p-1 border-none focus:border-none focus:bg-transparent bg-transparent w-full h-min"
+                                                            className="m-0 p-1 border-none after:border-none focus:border-none focus:bg-transparent bg-transparent w-full h-min"
                                                             autoFocus
                                                             value={newListName}
                                                             onChange={(e) => setNewListName(e.target.value)}
+                                                            disabled={isDuringAddList}
                                                         />
                                                         :
                                                         <SidebarGroupLabel onClick={handleAddingNewList} className="m-0 p-0 w-100 text-center d-flex flex-row gap-2">
@@ -316,7 +344,7 @@ export default function Layout({ children }: LayoutProps) {
                 </Sidebar>
                 <main className="w-full h-full max-h-100">
                     <SidebarTrigger size="lg" />
-                    {isSidebarLoaded && children}
+                    {isChildrenLoading ? <LoadingSpinner /> : children}
                 </main>
             </SidebarProvider>
         </div>

@@ -7,6 +7,7 @@ export async function POST(req) {
     const isTokenValid = await checkTokenFromRequest(req);
 
     if (!isTokenValid) {
+      console.log('invalid token');
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
@@ -22,8 +23,8 @@ export async function POST(req) {
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *;
       `;
-      await executeQuery(insertQuery, [firebaseId, email, username, createdAt, picture]);
-      checkResult = await executeQuery(checkQuery, [firebaseId]);
+      console.log('insertQuery', insertQuery);
+      checkResult = await executeQuery(insertQuery, [firebaseId, email, username, createdAt, picture]);
       dbUser = checkResult.rows[0];
     }
 
