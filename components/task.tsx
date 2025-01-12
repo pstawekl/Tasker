@@ -209,7 +209,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                                     </Container>
                                 }
                             </CardHeader>
-                            <CardContent className="flex justify-center items-center lg:justify-start">
+                            <CardContent className="flex text-gray-500 items-center justify-start">
                                 <Label>{task.description}</Label>
                             </CardContent>
                         </>

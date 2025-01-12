@@ -17,12 +17,15 @@ import { Plus } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { LayoutManager } from "../../../../utils/layout-manager";
 
 enum TaskSortingType {
-    byDueDateOlder = "Od najstarszej daty",
-    byDueDateLatest = "Od najpóźniejszej daty",
+    byDueDateOlder = "Od najdłuższej daty wykonania",
+    byDueDateLatest = "Od najkrótszej daty wykonania",
     byTitleAsc = "Po tytule zadania rosnąco",
     byTitleDesc = "Po tytule zadania malejąco",
+    byCreateLatest = "Od najnowszych",
+    byCreateOldest = "Od najstarszych"
 }
 
 
@@ -37,12 +40,13 @@ export default function TaskListPage() {
     const { taskListId } = useParams();
     const [tasks, setTasks] = useState<Tasks | null>(null);
     const [isTasksLoading, setIsTasksLoading] = useState<boolean>(true);
-    const [taskSortingType, setTaskSortingType] = useState<TaskSortingType>(TaskSortingType.byDueDateOlder);
+    const [taskSortingType, setTaskSortingType] = useState<TaskSortingType>(TaskSortingType.byCreateLatest);
     const { register, watch, reset, setValue } = useForm();
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [taskList, setTaskList] = useState<TaskList | null>(null);
     const [isTaskListError, setIsTaskListError] = useState<TaskListPageError>({ isError: false, message: '' });
     const [isLoadingOnMount, setIsLoadingOnMount] = useState(true);
+    const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -52,6 +56,28 @@ export default function TaskListPage() {
 
         return () => unsubscribe();
     }, []);
+
+    useEffect(() => {
+        const savedSortingType = localStorage.getItem('taskSortingType');
+        console.log(savedSortingType)
+        if (savedSortingType) {
+            setTaskSortingType(savedSortingType as TaskSortingType);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (user && taskList) {
+            setIsLoadingOnMount(true);
+            fetchTasks();
+            setIsLoadingOnMount(false);
+        }
+    }, [user, taskList, taskSortingType]);
+
+    useEffect(() => {
+        if (!isTasksLoading && !isTaskListError.isError && tasks) {
+            localStorage.setItem('taskSortingType', taskSortingType);
+        }
+    }, [taskSortingType]);
 
     const fetchTasks = async () => {
         if (user) {
@@ -151,13 +177,19 @@ export default function TaskListPage() {
                 return sortedTasks.sort((a, b) => a.title.localeCompare(b.title));
             case TaskSortingType.byTitleDesc:
                 return sortedTasks.sort((a, b) => b.title.localeCompare(a.title));
+            case TaskSortingType.byCreateLatest:
+                return sortedTasks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            case TaskSortingType.byCreateOldest:
+                return sortedTasks.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
             default:
                 return sortedTasks;
         }
     };
 
-    async function onSubmit(data) {
+    async function onSubmit(event) {
+        event.preventDefault();
         setIsLoadingOnMount(true);
+        setIsAddTaskDialogOpen(false);
         try {
             const date = watch('due_date') as string;
             const time = watch('due_time') as string;
@@ -178,7 +210,7 @@ export default function TaskListPage() {
                 }),
             });
             if (response.ok) {
-                refreshGrid();
+                fetchTasks();
                 reset();
             } else {
                 setIsTaskListError({ isError: true, message: 'Failed to add task' });
@@ -186,6 +218,7 @@ export default function TaskListPage() {
         } catch (error) {
             setIsTaskListError({ isError: true, message: error });
         }
+        setIsLoadingOnMount(false);
     }
 
     if (isLoading) {
@@ -196,78 +229,85 @@ export default function TaskListPage() {
 
     return (
         <div className="relative p-4 d-flex flex-column gap-3 max-h-[95vh] w-full h-full overflow-hidden">
-            <Dialog>
-                <DialogTrigger asChild>
-                    {
-                        !isTaskListError.isError && !isTasksLoading && tasks &&
-                        <Button variant="outline" className="w-min" title="Dodaj zadanie">
+            <div className="flex flex-row lg:flex-col gap-2 justify-between lg:justify-start">
+                <Dialog open={isAddTaskDialogOpen} onOpenChange={setIsAddTaskDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline" className="w-min" title="Dodaj zadanie" disabled={isTaskListError.isError && isTasksLoading && tasks.length == 0}>
                             <Plus />
                         </Button>
-                    }
-                </DialogTrigger>
-                <DialogContent className="w-[100vw] h-[100vh] d-flex flex-column md:w-auto md:h-auto md:min-w-[30%]">
-                    <DialogHeader className="d-flex flex-row items-center">
-                        <DialogTitle className="m-0">Dodaj nowe zadanie</DialogTitle>
-                    </DialogHeader>
-                    <form
-                        onSubmit={onSubmit}
-                        className="space-y-4"
-                    >
-                        <div>
-                            <label htmlFor="title" className="form-label">Tytuł zadania:</label>
-                            <Input type="text" id="title" name="title" {...register('title')} required />
-                        </div>
-                        <div>
-                            <label htmlFor="description" className="form-label">Opis:</label>
-                            <Textarea id="description" name="description" {...register('description')} required />
-                        </div>
-                        <div className="d-flex flex-column justify-center items-center">
-                            <label htmlFor="due_date" className="mr-auto ml-0 form-label">Termin wykonania:</label>
-                            <Calendar
-                                mode="single"
-                                selected={selectedDate}
-                                onSelect={(date) => setSelectedDate(date)}
-                            >
-                            </Calendar>
-                            <Input className="w-min" type="time" id="due_time" name="due_time" {...register('due_time')} lang={'pl-PL'} required />
-                        </div>
-                        <Button variant="outline" className='w-full' type="submit">Dodaj zadanie</Button>
-                    </form>
-                </DialogContent>
-            </Dialog>
-            {
-                !isTaskListError.isError && tasks && <div className="mb-3">
-                    <Label htmlFor="sorting" className="form-label ">Sortuj według:</Label>
-                    <Select
-                        value={taskSortingType}
-                        onValueChange={(value) => setTaskSortingType(value as TaskSortingType)}
-                    >
-                        <SelectTrigger className="w-full lg:w-1/6">
-                            <SelectValue placeholder={TaskSortingType.byDueDateOlder} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={TaskSortingType.byDueDateOlder}>{TaskSortingType.byDueDateOlder}</SelectItem>
-                            <SelectItem value={TaskSortingType.byDueDateLatest}>{TaskSortingType.byDueDateLatest}</SelectItem>
-                            <SelectItem value={TaskSortingType.byTitleAsc}>{TaskSortingType.byTitleAsc}</SelectItem>
-                            <SelectItem value={TaskSortingType.byTitleDesc}>{TaskSortingType.byTitleDesc}</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-            }
+                    </DialogTrigger>
+                    <DialogContent className="w-[100vw] h-[100vh] d-flex flex-column md:w-auto md:h-auto md:min-w-[30%]">
+                        <DialogHeader className="d-flex flex-row items-center">
+                            <DialogTitle className="m-0">Dodaj nowe zadanie</DialogTitle>
+                        </DialogHeader>
+                        <form
+                            onSubmit={async (event) => {
+                                await onSubmit(event);
+                                setIsAddTaskDialogOpen(false);
+                            }}
+                            className="space-y-4"
+                        >
+                            <div>
+                                <label htmlFor="title" className="form-label">Tytuł zadania:</label>
+                                <Input type="text" id="title" name="title" {...register('title')} required />
+                            </div>
+                            <div>
+                                <label htmlFor="description" className="form-label">Opis:</label>
+                                <Textarea id="description" name="description" {...register('description')} required />
+                            </div>
+                            <div className="d-flex flex-column justify-center items-center">
+                                <label htmlFor="due_date" className="mr-auto ml-0 form-label">Termin wykonania:</label>
+                                <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={(date) => setSelectedDate(date)}
+                                >
+                                </Calendar>
+                                <Input className="w-min" type="time" id="due_time" name="due_time" {...register('due_time')} lang={'pl-PL'} required />
+                            </div>
+                            <Button variant="outline" className='w-full' type="submit">Dodaj zadanie</Button>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+                {
+                    !isTaskListError.isError && <div className="mb-3">
+                        {
+                            !LayoutManager.getIsMobile() && <Label htmlFor="sorting" className="form-label ">Sortuj według:</Label>
+                        }
+                        <Select
+                            value={taskSortingType}
+                            onValueChange={(value) => !isTasksLoading && setTaskSortingType(value as TaskSortingType)}
+                            disabled={isTasksLoading || isTaskListError.isError || tasks.length == 0}
+                        >
+                            <SelectTrigger className="w-full lg:w-1/6">
+                                <SelectValue placeholder={taskSortingType} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value={TaskSortingType.byCreateLatest}>{TaskSortingType.byCreateLatest}</SelectItem>
+                                <SelectItem value={TaskSortingType.byCreateOldest}>{TaskSortingType.byCreateOldest}</SelectItem>
+                                <SelectItem value={TaskSortingType.byDueDateOlder}>{TaskSortingType.byDueDateOlder}</SelectItem>
+                                <SelectItem value={TaskSortingType.byDueDateLatest}>{TaskSortingType.byDueDateLatest}</SelectItem>
+                                <SelectItem value={TaskSortingType.byTitleAsc}>{TaskSortingType.byTitleAsc}</SelectItem>
+                                <SelectItem value={TaskSortingType.byTitleDesc}>{TaskSortingType.byTitleDesc}</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                }
+            </div>
             {
 
             }
             {
                 isTasksLoading && !isTaskListError ?
                     <div className="w-100 h-100 flex justify-center items-center"><TaskListSkeleton /></div> :
-                    <div className="overflow-y-auto overflow-x-hidden h-auto gap-3 d-flex flex-column">
+                    <div className="overflow-y-auto overflow-x-hidden h-full gap-3 d-flex flex-column">
                         {
                             tasks && sortTasks(tasks).map((task) => (
                                 !task.is_completed && <TaskComponent key={task.id} task={task} refreshGrid={refreshGrid} />
                             ))
                         }
                         {
-                            tasks && sortTasks(tasks).map((task) => (   
+                            tasks && sortTasks(tasks).map((task) => (
                                 task.is_completed && <TaskComponent key={task.id} task={task} refreshGrid={refreshGrid} />
                             ))
                         }
@@ -281,7 +321,7 @@ export default function TaskListPage() {
                 </div>
             }
             {
-                isLoadingOnMount && <LoadingSpinner />
+                isLoadingOnMount || !tasks || isTasksLoading && <LoadingSpinner />
             }
         </div>
     );
