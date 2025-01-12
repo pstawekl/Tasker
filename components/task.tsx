@@ -2,12 +2,15 @@
 import { auth } from "@/app/firebaseConfig";
 import { Button } from "@/components/ui/button";
 import { Task } from "@/lib/models/tasks";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
-import { Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useSwipeable } from 'react-swipeable';
 import { Container } from "reactstrap";
+import { LayoutManager } from "../utils/layout-manager";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Checkbox } from "./ui/checkbox";
 import { Label } from "./ui/label";
@@ -25,6 +28,10 @@ export default function TaskComponent(props: TaskComponentProps) {
     const [isOverdue, setIsOverdue] = useState(false);
     const [task, setTask] = useState<Task | null>(props.task);
     const [isDuringCheckboxChange, setIsDuringCheckboxChange] = useState(false);
+    const [offset, setOffset] = useState(0);
+    const [opacity, setOpacity] = useState(1);
+    const [bgColor, setBgColor] = useState('rgb(255, 255, 255)');
+    const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -110,41 +117,105 @@ export default function TaskComponent(props: TaskComponentProps) {
         }
     };
 
-    if (isDuringCheckboxChange) return <div key={task.id} className="flex space-x-2">
+    const isMobile = LayoutManager.getIsMobile();
+    const maxSwipe = typeof window !== 'undefined' ? -window.innerWidth * 0.75 : -300;
+    const colorThreshold = maxSwipe / 3;
+
+    const handlers = useSwipeable({
+        onSwiping: (e) => {
+            if (!isMobile || isDeleting) return;
+            if (e.deltaX < 0) {
+                const newOffset = Math.max(maxSwipe, e.deltaX);
+                setOffset(newOffset);
+                const progress = Math.abs(newOffset / maxSwipe);
+                setOpacity(1 - (progress * 0.7));
+
+                if (newOffset < colorThreshold) {
+                    const colorProgress = Math.abs((newOffset - colorThreshold) / (maxSwipe - colorThreshold));
+                    const red = Math.floor(255);
+                    const green = Math.floor(255 * (1 - colorProgress));
+                    const blue = Math.floor(255 * (1 - colorProgress));
+                    setBgColor(`rgb(${red}, ${green}, ${blue})`);
+                } else {
+                    setBgColor('rgb(255, 255, 255)');
+                }
+            }
+        },
+        onSwiped: async () => {
+            if (!isMobile || isDeleting) return;
+            if (offset > maxSwipe / 1.25) {
+                setOffset(0);
+                setOpacity(1);
+                setBgColor('rgb(255, 255, 255)');
+            } else {
+                setIsDeleting(true);
+                try {
+                    await handleDelete();
+                } catch (error) {
+                    setOffset(0);
+                    setOpacity(1);
+                    setBgColor('rgb(255, 255, 255)');
+                }
+                setIsDeleting(false);
+            }
+        }
+    });
+
+    if (isDuringCheckboxChange || !task) return <div key={task.id} className="flex space-x-2">
         <Skeleton className="h-[150px] flex-1" />
     </div>
 
     return (
-        <Card
-            onClick={(e) => {
-                console.log((e.target as HTMLInputElement).type);
-                if ((e.target as HTMLInputElement).type !== "button")
-                    router.push(`/dashboard/task/${task.id}`);
-            }}
-            className={`cursor-pointer bg-white-500 hover:bg-gray-50 ${isOverdue ? "bg-red-500 hover:bg-red-300" : ""} ${isCompleted ? "bg-green-400 hover:bg-green-300 text-white" : ""}`}
-        >
-            {
-                task &&
-                <>
-                    <CardHeader className={"d-flex flex-row gap-2 items-center justify-start md:justify-between"}>
-                        <Container className="gap-3 d-flex items-center">
-                            <Checkbox
-                                className="rounded-xl border-black-500"
-                                checked={isCompleted}
-                                onCheckedChange={handleCheckboxChange}
-                            />
-                            <Label className="text-md m-0">{task.title}</Label>
-                        </Container>
-                        <Container className="d-flex gap-3 items-center justify-end">
-                            <Label className="text-md text-gray-400 m-0">{displayText}</Label>
-                            <Button className={`${isCompleted || isOverdue ? "text-black hover:text-black" : ""}`} type="button" variant="outline" onClick={handleDelete}><Trash /></Button>
-                        </Container>
-                    </CardHeader>
-                    <CardContent>
-                        <Label>{task.description}</Label>
-                    </CardContent>
-                </>
-            }
-        </Card>
+        <div className="w-full h-full relative">
+            <div
+                {...handlers}
+                style={{
+                    transform: isDeleting ? 'translateX(-120%)' : `translateX(${offset}px)`,
+                    opacity: opacity,
+                    transition: offset === 0 && !isDeleting ? 'all 0.2s ease-out' : 'all 0.3s ease-out'
+                }}
+            >
+                <Card
+                    onClick={(e) => {
+                        if ((e.target as HTMLInputElement).type !== "button")
+                            router.push(`/dashboard/task/${task.id}`);
+                    }}
+                    className={`cursor-pointer bg-white-500 hover:bg-gray-50 shadow-md`}
+                    style={{ backgroundColor: isMobile ? bgColor : undefined }}
+                >
+                    {task && (
+                        <>
+                            <CardHeader className={"flex flex-row gap-2 items-center justify-start md:justify-between"}>
+                                <Container className="gap-3 flex items-center justify-between lg:justify-start">
+                                    <Checkbox
+                                        className={"rounded-full w-[40px] h-[40px] lg:w-[30px] lg:h-[30px] border-black-500"}
+                                        checked={isCompleted}
+                                        onCheckedChange={handleCheckboxChange}
+                                    />
+                                    <Label className="text-xl lg:text-md m-0 text-right lg:text-left">{task.title}</Label>
+                                </Container>
+                                {
+                                    !isMobile &&
+                                    <Container className="flex gap-3 items-center justify-end">
+                                        <Label className={"text-md text-gray-400 m-0" + `${isOverdue ? " text-red-600" : ""}`}>{displayText}</Label>
+                                        <Button
+                                            className={`${(isCompleted || isOverdue) && !isMobile ? "text-gray-800 hover:text-gray-800" : ""} ${isMobile ? "text-gray-0 pointer-events-none px-3" : ""}`}
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={isMobile ? undefined : handleDelete}
+                                        >
+                                            <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                    </Container>
+                                }
+                            </CardHeader>
+                            <CardContent className="flex justify-center items-center lg:justify-start">
+                                <Label>{task.description}</Label>
+                            </CardContent>
+                        </>
+                    )}
+                </Card>
+            </div>
+        </div>
     );
 }

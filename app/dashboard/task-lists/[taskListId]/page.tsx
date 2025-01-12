@@ -1,5 +1,6 @@
 'use client'
 import { auth } from "@/app/firebaseConfig";
+import LoadingSpinner from "@/components/loadingSpinner";
 import TaskListSkeleton from "@/components/skeletons/task-list-skeleton";
 import TaskComponent from "@/components/task";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ export default function TaskListPage() {
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const [taskList, setTaskList] = useState<TaskList | null>(null);
     const [isTaskListError, setIsTaskListError] = useState<TaskListPageError>({ isError: false, message: '' });
+    const [isLoadingOnMount, setIsLoadingOnMount] = useState(true);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -78,6 +80,7 @@ export default function TaskListPage() {
     }
 
     useEffect(() => {
+        setIsLoadingOnMount(true);
         const fetchTaskList = async () => {
             try {
                 const token = await user.getIdToken();
@@ -104,12 +107,15 @@ export default function TaskListPage() {
         if (user) {
             fetchTaskList();
         }
+        setIsLoadingOnMount(false);
     }, [user])
 
     useEffect(() => {
         if (taskList) {
+            setIsLoadingOnMount(true);
             document.title = taskList.name;
             fetchTasks();
+            setIsLoadingOnMount(false);
         }
     }, [taskList])
 
@@ -122,12 +128,16 @@ export default function TaskListPage() {
     }, [selectedDate]);
 
     function refreshGrid() {
+        setIsLoadingOnMount(true)
         setIsTasksLoading(true);
         fetchTasks();
+        setIsLoadingOnMount(false);
     }
 
     useEffect(() => {
+        setIsLoadingOnMount(true);
         fetchTasks();
+        setIsLoadingOnMount(false);
     }, [taskSortingType]);
 
     const sortTasks = (tasks: Tasks) => {
@@ -147,6 +157,7 @@ export default function TaskListPage() {
     };
 
     async function onSubmit(data) {
+        setIsLoadingOnMount(true);
         try {
             const date = watch('due_date') as string;
             const time = watch('due_time') as string;
@@ -177,8 +188,14 @@ export default function TaskListPage() {
         }
     }
 
+    if (isLoading) {
+        return <div className="w-full h-full relative">
+            <LoadingSpinner />
+        </div>;
+    }
+
     return (
-        <div className="p-4 d-flex flex-column gap-3 max-h-[95vh] w-full h-full overflow-hidden">
+        <div className="relative p-4 d-flex flex-column gap-3 max-h-[95vh] w-full h-full overflow-hidden">
             <Dialog>
                 <DialogTrigger asChild>
                     {
@@ -219,13 +236,13 @@ export default function TaskListPage() {
                 </DialogContent>
             </Dialog>
             {
-                !isTasksLoading && !isTaskListError.isError && tasks && <div className="mb-3">
+                !isTaskListError.isError && tasks && <div className="mb-3">
                     <Label htmlFor="sorting" className="form-label ">Sortuj według:</Label>
                     <Select
                         value={taskSortingType}
                         onValueChange={(value) => setTaskSortingType(value as TaskSortingType)}
                     >
-                        <SelectTrigger>
+                        <SelectTrigger className="w-full lg:w-1/6">
                             <SelectValue placeholder={TaskSortingType.byDueDateOlder} />
                         </SelectTrigger>
                         <SelectContent>
@@ -238,16 +255,19 @@ export default function TaskListPage() {
                 </div>
             }
             {
+
+            }
+            {
                 isTasksLoading && !isTaskListError ?
                     <div className="w-100 h-100 flex justify-center items-center"><TaskListSkeleton /></div> :
-                    <div className="overflow-y-scroll overflow-x-hidden h-auto gap-3 d-flex flex-column">
+                    <div className="overflow-y-auto overflow-x-hidden h-auto gap-3 d-flex flex-column">
                         {
                             tasks && sortTasks(tasks).map((task) => (
                                 !task.is_completed && <TaskComponent key={task.id} task={task} refreshGrid={refreshGrid} />
                             ))
                         }
                         {
-                            tasks && sortTasks(tasks).map((task) => (
+                            tasks && sortTasks(tasks).map((task) => (   
                                 task.is_completed && <TaskComponent key={task.id} task={task} refreshGrid={refreshGrid} />
                             ))
                         }
@@ -259,6 +279,9 @@ export default function TaskListPage() {
                     <div className="text-2xl text-normal">Nie udało się pobrać listy zadań</div>
                     <div className="text-lg">{isTaskListError.message}</div>
                 </div>
+            }
+            {
+                isLoadingOnMount && <LoadingSpinner />
             }
         </div>
     );

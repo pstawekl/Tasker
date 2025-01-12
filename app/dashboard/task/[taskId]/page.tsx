@@ -248,7 +248,7 @@ export default function TaskPage() {
             <div>{taskError.message}</div>
         </div>;
     } else return (
-        <div className='p-5 w-full d-flex flex-row justify-stretch gap-5'>
+        <div className='p-5 w-full d-flex flex-col lg:flex-row justify-stretch gap-5'>
             <Card className='w-full h-full'>
                 <CardHeader className='w-full d-flex flex-row gap-3 items-center'>
                     <Button className='w-min' onClick={() => router.back()} variant='outline'><FontAwesomeIcon icon={faArrowLeft} /></Button>

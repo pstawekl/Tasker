@@ -81,7 +81,7 @@ export default function LoginPage() {
         </div>
         <div className="top-content flex flex-col gap-4">
           <h1 className="text-2xl font-normal text-center">Witaj</h1>
-          <h3 className='text-gray-500 font-light text-center'>Zaloguj się do aplikacji Tasker używając adresu e-mail lub konta Google</h3>
+          <h3 className='text-gray-500 font-light text-center'>Zaloguj się do aplikacji {process.env.NEXT_PUBLIC_APP_NAME} używając adresu e-mail lub konta Google</h3>
         </div>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <form onSubmit={handleLogin}>

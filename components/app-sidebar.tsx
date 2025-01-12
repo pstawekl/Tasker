@@ -1,6 +1,5 @@
 'use client'
 import { auth } from '@/app/firebaseConfig';
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
@@ -214,7 +213,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Sidebar className="max-h-[100vh]" onLoad={() => setIsSidebarLoaded(true)}>
                     <SidebarContent>
                         <SidebarGroup>
-                            <SidebarGroupLabel className="whitespace-pre text-xl select-none"><Image src={Logo} alt="Logo" width={30} /> Tasker</SidebarGroupLabel>
+                            <SidebarGroupLabel className="whitespace-pre text-xl select-none"><Image src={Logo} alt="Logo" width={30} />{` ${process.env.NEXT_PUBLIC_APP_NAME}`}</SidebarGroupLabel>
                             <SidebarGroupContent className="mt-5">
                                 <SidebarMenu className="h-auto">
                                     <SidebarMenuItem className="h-auto" key={0}>
@@ -242,9 +241,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                                         <SidebarGroupLabel>{item.name}</SidebarGroupLabel>
                                                                     </a>
                                                                 </SidebarMenuButton>
-                                                                <SidebarMenuButton className="w-min">
-                                                                    <Button className="w-min" variant="ghost" onClick={() => removeList(item.id)}><FontAwesomeIcon icon={faTrash} /></Button>
-                                                                </SidebarMenuButton>
+                                                                <FontAwesomeIcon className="text-gray-500 hover:text-gray:800 hover:bg-gray-200" onClick={() => removeList(item.id)} icon={faTrash} />
                                                             </SidebarMenuItem>
                                                         ))}
                                                     </SidebarMenu>

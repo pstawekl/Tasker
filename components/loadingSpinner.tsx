@@ -1,11 +1,13 @@
-import React from 'react';
+import { Spinner } from '@/components/ui/spinner';
 
-const LoadingSpinner: React.FC = () => {
+type LoadingSpinnerProps = {
+    className?: string;
+}
+
+export default function LoadingSpinner({ className }: LoadingSpinnerProps) {
     return (
-        <div className="flex justify-center items-center h-screen">
-            <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32"></div>
+        <div className={"absolute inset-0 flex justify-center items-center bg-white/80 backdrop-blur-xs z-50 " + className}>
+            <Spinner className="text-gray-800 w-8 h-8" />
         </div>
     );
 };
-
-export default LoadingSpinner;

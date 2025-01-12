@@ -20,7 +20,7 @@ export const POST = async (req: Request) => {
     }
 
     const result = await executeQuery('SELECT * FROM users WHERE firebase_id = $1', [firebase_id]);
-    console.log('result.rows', result.rows);
+
     return NextResponse.json({ users: result.rows }, { status: 200 });
   } catch (error) {
     console.error('Error fetching user:', error);
