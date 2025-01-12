@@ -229,7 +229,7 @@ export default function TaskListPage() {
 
     return (
         <div className="relative p-4 d-flex flex-column gap-3 max-h-[95vh] w-full h-full overflow-hidden">
-            <div className="flex flex-row lg:flex-col gap-2 justify-between lg:justify-start">
+            <div className="flex flex-row lg:!flex-col gap-2 justify-between lg:justify-start">
                 <Dialog open={isAddTaskDialogOpen} onOpenChange={setIsAddTaskDialogOpen}>
                     <DialogTrigger asChild>
                         <Button variant="outline" className="w-min" title="Dodaj zadanie" disabled={isTaskListError.isError && isTasksLoading && tasks.length == 0}>
