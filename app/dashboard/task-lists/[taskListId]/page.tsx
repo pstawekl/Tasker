@@ -227,12 +227,16 @@ export default function TaskListPage() {
         </div>;
     }
 
+    const isAddNewTaskButttonDisabled: boolean = isTaskListError.isError && isTasksLoading && tasks && tasks.length == 0;
+
+    const isLoadingSpinnerShow: boolean = isLoadingOnMount || !tasks || isTasksLoading;
+
     return (
         <div className="relative p-4 d-flex flex-column gap-3 max-h-[95vh] w-full h-full overflow-hidden">
             <div className="flex flex-row lg:!flex-col gap-2 justify-between lg:justify-start">
                 <Dialog open={isAddTaskDialogOpen} onOpenChange={setIsAddTaskDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="w-min" title="Dodaj zadanie" disabled={isTaskListError.isError && isTasksLoading && tasks.length == 0}>
+                        <Button variant="outline" className="w-min" title="Dodaj zadanie" disabled={isAddNewTaskButttonDisabled}>
                             <Plus />
                         </Button>
                     </DialogTrigger>
@@ -300,10 +304,10 @@ export default function TaskListPage() {
             {
                 isTasksLoading && !isTaskListError ?
                     <div className="w-100 h-100 flex justify-center items-center"><TaskListSkeleton /></div> :
-                    <div className="overflow-y-auto overflow-x-hidden h-full gap-3 d-flex flex-column">
+                    <div className="overflow-y-auto overflow-x-hidden h-full gap-3 flex flex-col">
                         {
                             tasks && sortTasks(tasks).map((task) => (
-                                !task.is_completed && <TaskComponent key={task.id} task={task} refreshGrid={refreshGrid} />
+                                !task.is_completed && <TaskComponent onClick={() => setIsTasksLoading(true)} key={task.id} task={task} refreshGrid={refreshGrid} />
                             ))
                         }
                         {
@@ -321,7 +325,7 @@ export default function TaskListPage() {
                 </div>
             }
             {
-                isLoadingOnMount || !tasks || isTasksLoading && <LoadingSpinner />
+                isLoadingSpinnerShow && <LoadingSpinner />
             }
         </div>
     );

@@ -16,6 +16,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Spinner } from 'reactstrap';
+import { notificationService } from '../../../../utils/notificationUtils';
 
 type TaskError = {
     message: string;
@@ -116,7 +117,11 @@ export default function TaskPage() {
     const addReminder = async () => {
         const date = watch('reminder_date') as string;
         const time = watch('reminder_time') as string;
-        const reminderTime: Date = new Date(`${date} ${time}:00`);
+        const reminderTime: Date = new Date(`${date}T${time}:00`);
+
+        // Adjust for timezone offset
+        const timezoneOffset = reminderTime.getTimezoneOffset() * 60000;
+        const adjustedReminderTime = new Date(reminderTime.getTime() - timezoneOffset);
 
         try {
             const response = await fetch('/api/postgres/reminders', {
@@ -127,7 +132,7 @@ export default function TaskPage() {
                 },
                 body: JSON.stringify({
                     task_id: taskId,
-                    reminder_time: reminderTime,
+                    reminder_time: adjustedReminderTime,
                 }),
             });
 
@@ -159,6 +164,9 @@ export default function TaskPage() {
             if (response.ok) {
                 const updatedReminder = await response.json();
                 setReminders(reminders.map(reminder => reminder.id === id ? updatedReminder : reminder));
+                if (task) {
+                    await notificationService.updateTaskReminder(task, updatedReminder);
+                }
             } else {
                 console.error('Failed to update reminder');
             }
@@ -180,6 +188,7 @@ export default function TaskPage() {
 
             if (response.ok) {
                 setReminders(reminders.filter(reminder => reminder.id !== id));
+                await notificationService.deleteTaskReminder(taskId as string);
             } else {
                 console.error('Failed to delete reminder');
             }
@@ -334,7 +343,7 @@ export default function TaskPage() {
                                         {...register('reminder_time', { required: true })}
                                     />
                                 </div>
-                                <Button variant={'outline'} type="submit" className="w-full">Zapisz</Button>
+                                <Button variant={'outline'} type="submit" onClick={() => setIsAddReminderDialogOpen(false)} className="w-full">Zapisz</Button>
                             </form>
                         </DialogContent>
                     </Dialog>

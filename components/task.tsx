@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { format } from "date-fns";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { MouseEventHandler, useEffect, useState } from "react";
 import { useSwipeable } from 'react-swipeable';
 import { Container } from "reactstrap";
 import { LayoutManager } from "../utils/layout-manager";
@@ -19,6 +19,7 @@ import { Skeleton } from "./ui/skeleton";
 interface TaskComponentProps {
     task: Task;
     refreshGrid: () => void;
+    onClick?: MouseEventHandler<HTMLDivElement>;
 }
 
 export default function TaskComponent(props: TaskComponentProps) {
@@ -166,7 +167,7 @@ export default function TaskComponent(props: TaskComponentProps) {
     </div>
 
     return (
-        <div className="w-full h-full relative">
+        <div className="w-full h-auto relative">
             <div
                 {...handlers}
                 style={{
@@ -177,6 +178,8 @@ export default function TaskComponent(props: TaskComponentProps) {
             >
                 <Card
                     onClick={(e) => {
+                        () => props.onClick;
+
                         if ((e.target as HTMLInputElement).type !== "button")
                             router.push(`/dashboard/task/${task.id}`);
                     }}

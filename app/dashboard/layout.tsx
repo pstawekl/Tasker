@@ -254,6 +254,14 @@ export default function Layout({ children }: LayoutProps) {
         return <div className="w-full h-full flex items-center justify-center"><LoadingSpinner /></div>;
     }
 
+    function handleRemoveTasksList(id: number) {
+        removeList(id)
+
+        if (window.location.pathname == `/dashboard/task-lists/${id}`) {
+            navigate.push('/dashboard')
+        }
+    }
+
     if (!LayoutManager.getIsMobile()) {
         return (
             <div>
@@ -295,7 +303,7 @@ export default function Layout({ children }: LayoutProps) {
                                                                                 {item.name}
                                                                             </Link>
                                                                         </SidebarMenuButton>
-                                                                        <SidebarMenuButton onClick={() => removeList(item.id)} className="w-min px-2">
+                                                                        <SidebarMenuButton onClick={() => handleRemoveTasksList(item.id)} className="w-min px-2">
                                                                             <FontAwesomeIcon icon={faTrash} />
                                                                         </SidebarMenuButton>
                                                                     </SidebarMenuItem>
@@ -331,7 +339,7 @@ export default function Layout({ children }: LayoutProps) {
                                                                 disabled={isDuringAddList}
                                                             />
                                                             :
-                                                            <SidebarGroupLabel onClick={handleAddingNewList} className="m-0 p-0 w-100 text-center d-flex flex-row gap-2 text-lg">
+                                                            <SidebarGroupLabel onClick={handleAddingNewList} className="m-0 p-0 w-100 text-center d-flex flex-row gap-2 text-md">
                                                                 Dodaj listę
                                                                 <Plus className="ml-auto" onClick={handlePlusClick} />
                                                             </SidebarGroupLabel>
@@ -342,9 +350,9 @@ export default function Layout({ children }: LayoutProps) {
                                         <SidebarMenuItem>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <SidebarMenuButton className="d-flex flex-row w-full">
+                                                    <SidebarMenuButton className="flex flex-row w-full">
                                                         <Image src={user?.photoURL ?? DefaultUserAvatar} alt="User avatar" width={30} height={30} className="max-w-[30px] max-h-[30px] rounded-full flex-auto" />
-                                                        <SidebarGroupLabel className="flex-auto max-w-100 overflow-hidden text-ellipsis text-md">{user && user.displayName ? user.displayName : user.email}</SidebarGroupLabel>
+                                                        <SidebarGroupLabel className="w-auto overflow-hidden text-ellipsis text-md">{user && user.displayName ? user.displayName : user.email}</SidebarGroupLabel>
                                                         <ChevronUp className="ml-auto flex-auto" />
                                                     </SidebarMenuButton>
                                                 </DropdownMenuTrigger>
@@ -424,8 +432,6 @@ export default function Layout({ children }: LayoutProps) {
                 <main className='w-full h-full overflow-hidden pb-16'>
                     {children}
                 </main>
-
-                {/* Bottom Add List Panel */}
             </div>
         )
     }
