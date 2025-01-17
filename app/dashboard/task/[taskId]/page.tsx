@@ -7,7 +7,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Reminders } from '@/lib/models/reminders';
+import { Reminder, Reminders } from '@/lib/models/reminders';
 import { Task } from '@/lib/models/tasks';
 import { faArrowLeft, faBell, faCheck, faClose, faPen, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -106,24 +106,38 @@ export default function TaskPage() {
         }
     }, [taskId, user]);
 
-    useEffect(() => {
-        if (selectedDate) {
-            const date = selectedDate.getFullYear() + '-' + String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' + String(selectedDate.getDate()).padStart(2, '0');
-            setValue('reminder_date', date);
-        }
-    }, [selectedDate])
-
-
     const addReminder = async () => {
-        const date = watch('reminder_date') as string;
-        const time = watch('reminder_time') as string;
-        const reminderTime: Date = new Date(`${date}T${time}:00`);
+        const time = watch('reminder_time');
 
-        // Adjust for timezone offset
-        const timezoneOffset = reminderTime.getTimezoneOffset() * 60000;
-        const adjustedReminderTime = new Date(reminderTime.getTime() - timezoneOffset);
+        if (!selectedDate || !time) {
+            console.error('Missing date or time:', { selectedDate, time });
+            return;
+        }
 
         try {
+            const [hours, minutes] = time.split(':').map(Number);
+            const reminderDate = new Date(selectedDate);
+            
+            // Ustaw czas lokalny
+            reminderDate.setHours(hours, minutes, 0, 0);
+
+            // Konwertuj na UTC dla API
+            const utcDate = new Date(
+                Date.UTC(
+                    reminderDate.getFullYear(),
+                    reminderDate.getMonth(),
+                    reminderDate.getDate(),
+                    reminderDate.getHours(),
+                    reminderDate.getMinutes()
+                )
+            );
+
+            console.log('Creating reminder for:', {
+                localDate: reminderDate.toLocaleString(),
+                utcDate: utcDate.toUTCString(),
+                inputTime: time
+            });
+
             const response = await fetch('/api/postgres/reminders', {
                 method: 'POST',
                 headers: {
@@ -132,20 +146,42 @@ export default function TaskPage() {
                 },
                 body: JSON.stringify({
                     task_id: taskId,
-                    reminder_time: adjustedReminderTime,
+                    reminder_time: utcDate.toISOString(),
                 }),
             });
 
             if (response.ok) {
                 const newReminder = await response.json();
                 setReminders([...reminders, newReminder]);
+
+                if (task) {
+                    const scheduled = await notificationService.scheduleTaskReminder(task, newReminder);
+                    console.log('Notification scheduling result:', scheduled);
+                }
+
+                setIsAddReminderDialogOpen(false);
+                reset();
             } else {
-                console.error('Failed to add reminder');
+                console.error('Failed to add reminder:', await response.text());
             }
         } catch (error) {
-            console.error('Error adding reminder:', error);
+            console.error('Error adding reminder:', error, {
+                selectedDate: selectedDate?.toLocaleString(),
+                time,
+            });
         }
     };
+
+    useEffect(() => {
+        // Schedule all existing reminders when component mounts
+        if (task && reminders.length > 0) {
+            reminders.forEach(reminder => {
+                notificationService.scheduleTaskReminder(task, reminder)
+                    .then(() => console.log('Reminder scheduled:', reminder))
+                    .catch(err => console.error('Error scheduling reminder:', err));
+            });
+        }
+    }, [task, reminders]);
 
     const updateReminder = async (id: number, reminderTime: Date) => {
         try {
@@ -238,6 +274,12 @@ export default function TaskPage() {
             setIsEditing({ ...isEditing, [field]: false });
         }
     };
+
+    const openDialogForUpdate = (reminder: Reminder) => {
+        setSelectedDate(new Date(reminder.reminder_time));
+        setIsAddReminderDialogOpen(true);
+        setValue('reminder_time', new Date(reminder.reminder_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }
 
     if (loading) {
         return <Spinner />;
@@ -340,6 +382,7 @@ export default function TaskPage() {
                                         className='w-min'
                                         id="reminder_time"
                                         type="time"
+                                        step="60"
                                         {...register('reminder_time', { required: true })}
                                     />
                                 </div>
@@ -358,10 +401,10 @@ export default function TaskPage() {
                         <CardContent>
                             <ul className="d-flex flex-column">
                                 {reminders && reminders.map(reminder => (
-                                    <li key={reminder.id} className="d-flex flex-row justify-between p-3 items-center hover:rounded hover:bg-gray-100">
-                                        <span className='text-lg'>{new Date(reminder.reminder_time).toLocaleString()}</span>
+                                    <li key={reminder.id} className="d-flex flex-row justify-between p-3 items-center hover:rounded hover:bg-gray-100 hover:dark:bg-gray-800">
+                                        <span className='text-lg'>{new Date(reminder.reminder_time).toLocaleString([], { hour: '2-digit', minute: '2-digit', year: 'numeric', month: '2-digit', day: '2-digit' })}</span>
                                         <div>
-                                            <Button variant='outline' onClick={() => updateReminder(reminder.id, new Date())}>
+                                            <Button variant='outline' onClick={() => openDialogForUpdate(reminder)}>
                                                 <FontAwesomeIcon icon={faPen} />
                                             </Button>
                                             <Button variant='outline' onClick={() => deleteReminder(reminder.id)}>

@@ -236,13 +236,13 @@ export default function TaskListPage() {
             <div className="flex flex-row lg:!flex-col gap-2 justify-between lg:justify-start">
                 <Dialog open={isAddTaskDialogOpen} onOpenChange={setIsAddTaskDialogOpen}>
                     <DialogTrigger asChild>
-                        <Button variant="outline" className="w-min" title="Dodaj zadanie" disabled={isAddNewTaskButttonDisabled}>
+                        <Button variant="outline" className="w-min dark:text-white" title="Dodaj zadanie" disabled={isAddNewTaskButttonDisabled}>
                             <Plus />
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="w-[100vw] h-[100vh] d-flex flex-column md:w-auto md:h-auto md:min-w-[30%]">
-                        <DialogHeader className="d-flex flex-row items-center">
-                            <DialogTitle className="m-0">Dodaj nowe zadanie</DialogTitle>
+                        <DialogHeader className="flex flex-row items-center">
+                            <DialogTitle className="m-0 dark:text-gray-100">Dodaj nowe zadanie</DialogTitle>
                         </DialogHeader>
                         <form
                             onSubmit={async (event) => {
@@ -252,24 +252,32 @@ export default function TaskListPage() {
                             className="space-y-4"
                         >
                             <div>
-                                <label htmlFor="title" className="form-label">Tytuł zadania:</label>
+                                <label htmlFor="title" className="form-label dark:text-gray-100">Tytuł zadania:</label>
                                 <Input type="text" id="title" name="title" {...register('title')} required />
                             </div>
                             <div>
-                                <label htmlFor="description" className="form-label">Opis:</label>
+                                <label htmlFor="description" className="form-label dark:text-gray-100">Opis:</label>
                                 <Textarea id="description" name="description" {...register('description')} required />
                             </div>
                             <div className="d-flex flex-column justify-center items-center">
-                                <label htmlFor="due_date" className="mr-auto ml-0 form-label">Termin wykonania:</label>
+                                <label htmlFor="due_date" className="mr-auto ml-0 form-label dark:text-gray-100">Termin wykonania:</label>
                                 <Calendar
                                     mode="single"
                                     selected={selectedDate}
                                     onSelect={(date) => setSelectedDate(date)}
                                 >
                                 </Calendar>
-                                <Input className="w-min" type="time" id="due_time" name="due_time" {...register('due_time')} lang={'pl-PL'} required />
+                                <Input
+                                    className="w-min dark:text-gray-100 dark:bg-slate-950 dark:border-slate-800 dark:focus:border-slate-700"
+                                    type="time"
+                                    id="due_time"
+                                    name="due_time"
+                                    {...register('due_time')}
+                                    lang={'pl-PL'}
+                                    required
+                                />
                             </div>
-                            <Button variant="outline" className='w-full' type="submit">Dodaj zadanie</Button>
+                            <Button variant="outline" className='w-full dark:text-gray-100' type="submit">Dodaj zadanie</Button>
                         </form>
                     </DialogContent>
                 </Dialog>
@@ -283,7 +291,7 @@ export default function TaskListPage() {
                             onValueChange={(value) => !isTasksLoading && setTaskSortingType(value as TaskSortingType)}
                             disabled={isTasksLoading || isTaskListError.isError || tasks.length == 0}
                         >
-                            <SelectTrigger className="w-full lg:w-1/6">
+                            <SelectTrigger className="w-full lg:w-1/6 dark:text-slate-200">
                                 <SelectValue placeholder={taskSortingType} />
                             </SelectTrigger>
                             <SelectContent>

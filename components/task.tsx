@@ -183,7 +183,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                         if ((e.target as HTMLInputElement).type !== "button")
                             router.push(`/dashboard/task/${task.id}`);
                     }}
-                    className={`cursor-pointer bg-white-500 hover:bg-gray-50 shadow-md`}
+                    className={`cursor-pointer bg-white-500 hover:bg-gray-50 hover:dark:bg-gray-900 shadow-md`}
                     style={{ backgroundColor: isMobile ? bgColor : undefined }}
                 >
                     {task && (
@@ -202,7 +202,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                                     <Container className="flex gap-3 items-center justify-end">
                                         <Label className={"text-md text-gray-400 m-0" + `${isOverdue ? " text-red-600" : ""}`}>{displayText}</Label>
                                         <Button
-                                            className={`${(isCompleted || isOverdue) && !isMobile ? "text-gray-800 hover:text-gray-800" : ""} ${isMobile ? "text-gray-0 pointer-events-none px-3" : ""}`}
+                                            className={`${(isCompleted || isOverdue) && !isMobile ? "text-gray-800 dark:text-gray-200 hover:text-gray-800" : ""} ${isMobile ? "text-gray-0 dark:text-black-900 pointer-events-none px-3" : ""}`}
                                             type="button"
                                             variant="ghost"
                                             onClick={isMobile ? undefined : handleDelete}
@@ -212,7 +212,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                                     </Container>
                                 }
                             </CardHeader>
-                            <CardContent className="flex text-gray-500 items-center justify-start">
+                            <CardContent className="flex text-gray-500 dark:text-gray-200 items-center justify-start">
                                 <Label>{task.description}</Label>
                             </CardContent>
                         </>
