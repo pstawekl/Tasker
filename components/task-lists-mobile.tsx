@@ -13,13 +13,16 @@ interface TaskListMobileProps {
 }
 
 const TaskListsMobile: React.FC<TaskListMobileProps> = ({ name, id, fetchItems }) => {
+    const isDark = localStorage.getItem('appMode') === 'dark';
     const [offset, setOffset] = useState(0);
     const [opacity, setOpacity] = useState(1);
-    const [bgColor, setBgColor] = useState('rgb(255, 255, 255)');
+    const [bgColor, setBgColor] = useState(isDark ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)');
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeleted, setIsDeleted] = useState(false);
     const [user, setUser] = useState(null);
     const navigate = useRouter();
+    const [isSwipping, setIsSwipping] = useState(false);
+
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((authUser) => {
@@ -60,6 +63,7 @@ const TaskListsMobile: React.FC<TaskListMobileProps> = ({ name, id, fetchItems }
     const handlers = useSwipeable({
         onSwiping: (e) => {
             if (isDeleting) return;
+            setIsSwipping(true);
             if (e.deltaX < 0) {
                 const newOffset = Math.max(maxSwipe, e.deltaX);
                 setOffset(newOffset);
@@ -77,7 +81,7 @@ const TaskListsMobile: React.FC<TaskListMobileProps> = ({ name, id, fetchItems }
                     const blue = Math.floor(255 * (1 - colorProgress));
                     setBgColor(`rgb(${red}, ${green}, ${blue})`);
                 } else {
-                    setBgColor('rgb(255, 255, 255)');
+                    setBgColor(isDark ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)');
                 }
             }
         },
@@ -87,7 +91,8 @@ const TaskListsMobile: React.FC<TaskListMobileProps> = ({ name, id, fetchItems }
             if (offset > maxSwipe / 1.25) {
                 setOffset(0);
                 setOpacity(1);
-                setBgColor('rgb(255, 255, 255)');
+                setBgColor(isDark ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)');
+                setIsSwipping(false);
             } else {
                 // Delete the task list
                 setIsDeleting(true);
@@ -97,7 +102,8 @@ const TaskListsMobile: React.FC<TaskListMobileProps> = ({ name, id, fetchItems }
                     // Reset states if deletion fails
                     setOffset(0);
                     setOpacity(1);
-                    setBgColor('rgb(255, 255, 255)');
+                    setBgColor(isDark ? 'rgb(0, 0, 0)' : 'rgb(255, 255, 255)');
+                    setIsSwipping(false);
                 }
                 setIsDeleting(false);
             }
@@ -116,13 +122,13 @@ const TaskListsMobile: React.FC<TaskListMobileProps> = ({ name, id, fetchItems }
                 }}
             >
                 <Card
-                    className={"w-full bg-gray-0 active:bg-gray-300 transition-colors duration-200" + ` ${isDeleted ? ' opacity-0' : ''}`}
+                    className={"w-full bg-gray-0 active:bg-gray-300 dark:bg-black transition-colors duration-200" + ` ${isDeleted ? ' opacity-0' : ''}`}
                     style={{ backgroundColor: bgColor }}
                     onClick={() => navigate.push(`/dashboard/task-lists/${id}`)}
                 >
                     <CardHeader className="flex flex-row justify-between px-6 py-3">
-                        <CardTitle className='text-gray-700'>{name}</CardTitle>
-                        <FontAwesomeIcon className='text-white' icon={faTrash} />
+                        <CardTitle className='text-gray-700 dark:text-gray-100'>{name}</CardTitle>
+                        <FontAwesomeIcon className={'text-white-900 dark:text-black-900' + `${isSwipping ? "" : " hidden"}`} icon={faTrash} />
                     </CardHeader>
                 </Card>
             </div>

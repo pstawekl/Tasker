@@ -7,6 +7,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+:root {
+  --card-background: #ffffff;
+}
+
+[data-theme='dark'] {
+  --card-background: #1a1a1a;
+}
+
 code {
   white-space: pre-wrap;
   word-break: break-all;

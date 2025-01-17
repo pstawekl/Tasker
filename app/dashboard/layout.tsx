@@ -384,13 +384,13 @@ export default function Layout({ children }: LayoutProps) {
         )
     } else {
         return (
-            <div className="w-screen h-screen flex flex-col overflow-hidden bg-gray-100">
-                <div className='w-full overflow-hidden flex flex-row justify-between items-center gap-2 p-2 bg-white text-xl'>
+            <div className="w-screen h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-black">
+                <div className='w-full overflow-hidden flex flex-row justify-between items-center gap-2 p-2 bg-white-900 text-xl dark:bg-gray-600'>
                     {isShowButtonBack &&
                         <Button className='px-2' variant='ghost' onClick={() => navigate.back()}>
-                            <FontAwesomeIcon icon={faArrowLeft} />
+                            <FontAwesomeIcon className='dark:text-white' size='10x' icon={faArrowLeft} />
                         </Button>}
-                    <div className={'flex flex-row justify-start items-center text-gray-600 gap-2' + `${isShowButtonBack ? ' self-center' : ''}`}>
+                    <div className={'flex flex-row justify-start items-center text-gray-600 dark:text-gray-100 gap-2' + `${isShowButtonBack ? ' self-center' : ''}`}>
                         <Image src={Logo} alt="Logo" width={30} />{process.env.NEXT_PUBLIC_APP_NAME}
                     </div>
                     <div className="justify-end">
