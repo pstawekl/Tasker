@@ -37,7 +37,7 @@ export default function Layout({ children }: LayoutProps) {
     const [loading, setLoading] = useState(true);
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [taskList, setTaskList] = useState<TaskLists>([]);
-    const [defaultOpen, setDefaultOpen] = useState<boolean>(false);
+    const [defaultOpen, setDefaultOpen] = useState<boolean>(true);
     const [isAddingNewList, setIsAddingNewList] = useState<boolean>(false);
     const [isSidebarLoaded, setIsSidebarLoaded] = useState(false);
     const [newListName, setNewListName] = useState<string>('');
