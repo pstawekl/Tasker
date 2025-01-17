@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from '@/components/ui/skeleton';
 import { TaskLists } from "@/lib/models/taskList";
 import { User as DbUser } from '@/lib/models/users';
@@ -25,8 +25,6 @@ interface LayoutProps {
     children: ReactNode;
 }
 
-const SIDEBAR_COOKIE_NAME = 'sidebar:state';
-
 type IsDuringDeleteListType = {
     isDeleting: boolean;
     id: number | null;
@@ -37,7 +35,6 @@ export default function Layout({ children }: LayoutProps) {
     const [loading, setLoading] = useState(true);
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [taskList, setTaskList] = useState<TaskLists>([]);
-    const [defaultOpen, setDefaultOpen] = useState<boolean>(false);
     const [isAddingNewList, setIsAddingNewList] = useState<boolean>(false);
     const [isSidebarLoaded, setIsSidebarLoaded] = useState(false);
     const [newListName, setNewListName] = useState<string>('');
@@ -111,10 +108,6 @@ export default function Layout({ children }: LayoutProps) {
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [isAddingNewList, newListName]);
-
-    useEffect(() => {
-        setDefaultOpen(Boolean(getCookie(SIDEBAR_COOKIE_NAME)));
-    }, []);
 
     useEffect(() => {
         const fetchDbUser = async () => {
@@ -265,16 +258,16 @@ export default function Layout({ children }: LayoutProps) {
     if (!LayoutManager.getIsMobile()) {
         return (
             <div>
-                <SidebarProvider className='flex flex-row justify-between' defaultOpen={Boolean(defaultOpen)}>
-                    <Sidebar className="max-h-[100vh] w-[20%]" onLoad={() => setIsSidebarLoaded(true)}>
+                <SidebarProvider className='flex flex-row justify-between' defaultOpen={true}>
+                    <Sidebar className="max-h-[100vh] w-[20%] dark:bg-gray-900" onLoad={() => setIsSidebarLoaded(true)}>
                         <SidebarContent className="flex flex-col h-full">
                             <SidebarGroup className="flex flex-col flex-1">
-                                <SidebarGroupLabel className="whitespace-pre text-2xl select-none"><Image src={Logo} alt="Logo" width={30} /> Tasker</SidebarGroupLabel>
+                                <SidebarGroupLabel className="whitespace-pre text-2xl select-none dark:text-gray-100"><Image src={Logo} alt="Logo" width={30} /> Tasker</SidebarGroupLabel>
                                 <SidebarGroupContent className="mt-5 flex flex-col flex-1">
                                     <SidebarMenu className="h-full text-lg">
                                         <SidebarMenuItem className="h-auto" key={0}>
                                             <SidebarMenuButton asChild>
-                                                <Link className="hover:no-underline text-lg text-gray-500" href="/dashboard">
+                                                <Link className="hover:no-underline text-lg text-gray-500 dark:text-gray-400" href="/dashboard">
                                                     Dashboard
                                                 </Link>
                                             </SidebarMenuButton>
@@ -299,7 +292,7 @@ export default function Layout({ children }: LayoutProps) {
                                                                     :
                                                                     <SidebarMenuItem className="group-hover:bg-gray-0 d-flex flex-row" key={item.id}>
                                                                         <SidebarMenuButton className="d-flex flex-row w-100" asChild>
-                                                                            <Link className="text-black hover:no-underline text-md overflow-hidden text-ellipsis ... whitespace-nowrap" href={`/dashboard/task-lists/${item.id}`}>
+                                                                            <Link className="text-gray-800 hover:no-underline text-md overflow-hidden text-ellipsis ... whitespace-nowrap dark:text-gray-100" href={`/dashboard/task-lists/${item.id}`}>
                                                                                 {item.name}
                                                                             </Link>
                                                                         </SidebarMenuButton>
@@ -358,7 +351,7 @@ export default function Layout({ children }: LayoutProps) {
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent
                                                     side="top"
-                                                    className="w-[--radix-popper-anchor-width]"
+                                                    className="w-[--radix-popper-anchor-width] dark:bg-gray-900"
                                                 >
                                                     <DropdownMenuItem>
                                                         <Link className="w-100 text-lg text-black hover:no-underline d-flex flex-row gap-2 items-center" href="/dashboard/profile">
@@ -366,7 +359,7 @@ export default function Layout({ children }: LayoutProps) {
                                                         </Link>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem>
-                                                        <Link className="w-100 text-lg text-black hover:no-underline d-flex flex-row gap-2 items-center" href="#">
+                                                        <Link className="w-100 text-lg text-black hover:no-underline d-flex flex-row gap-2 items-center" href="/dashboard/settings">
                                                             <SidebarGroupLabel className="gap-2 text-lg"><FontAwesomeIcon icon={faGear} /> Ustawienia</SidebarGroupLabel>
                                                         </Link>
                                                     </DropdownMenuItem>
@@ -384,7 +377,6 @@ export default function Layout({ children }: LayoutProps) {
                         </SidebarFooter>
                     </Sidebar>
                     <main className="w-[80%] h-full max-h-100">
-                        <SidebarTrigger size="lg" />
                         {children}
                     </main>
                 </SidebarProvider>
@@ -392,13 +384,13 @@ export default function Layout({ children }: LayoutProps) {
         )
     } else {
         return (
-            <div className="w-screen h-screen flex flex-col overflow-hidden bg-gray-100">
-                <div className='w-full overflow-hidden flex flex-row justify-between items-center gap-2 p-2 bg-white text-xl'>
+            <div className="w-screen h-screen flex flex-col overflow-hidden bg-gray-100 dark:bg-black">
+                <div className='w-full overflow-hidden flex flex-row justify-between items-center gap-2 p-2 bg-white-900 text-xl dark:bg-gray-600'>
                     {isShowButtonBack &&
                         <Button className='px-2' variant='ghost' onClick={() => navigate.back()}>
-                            <FontAwesomeIcon icon={faArrowLeft} />
+                            <FontAwesomeIcon className='dark:text-white' size='10x' icon={faArrowLeft} />
                         </Button>}
-                    <div className={'flex flex-row justify-start items-center text-gray-600 gap-2' + `${isShowButtonBack ? ' self-center' : ''}`}>
+                    <div className={'flex flex-row justify-start items-center text-gray-600 dark:text-gray-100 gap-2' + `${isShowButtonBack ? ' self-center' : ''}`}>
                         <Image src={Logo} alt="Logo" width={30} />{process.env.NEXT_PUBLIC_APP_NAME}
                     </div>
                     <div className="justify-end">
@@ -435,10 +427,4 @@ export default function Layout({ children }: LayoutProps) {
             </div>
         )
     }
-}
-
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
 }

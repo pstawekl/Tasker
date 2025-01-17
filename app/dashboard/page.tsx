@@ -132,7 +132,7 @@ export default function Dashboard() {
     if (!LayoutManager.getIsMobile()) {
       return (
         <div className="flex flex-column items-start justify-center gap-3 p-5 flex-none md:grid md:grid-cols-3 md:gap-5">
-          <Card className="w-full flex-grow-1 hover:bg-gray-50">
+          <Card className="w-full flex-grow-1 hover:bg-gray-50 dark:hover:bg-gray-800">
             <CardHeader className="h-auto">
               <CardTitle className="overflow-hidden pb-1 text-ellipsis">Witaj, {user && user.displayName ? user.displayName : user.email}!</CardTitle>
             </CardHeader>
@@ -142,7 +142,7 @@ export default function Dashboard() {
               <Label className="mt-2 text-center">Zweryfikowany użytkownik: {user.emailVerified ? 'Tak' : 'Nie'}</Label>
             </CardContent>
           </Card>
-          <Card className="w-full flex-grow-1 hover:bg-gray-50">
+          <Card className="w-full flex-grow-1 hover:bg-gray-50 dark:hover:bg-gray-800">
             <CardHeader>
               <CardTitle>Liczba niewykonanych zadań wg dnia</CardTitle>
             </CardHeader>
@@ -150,7 +150,7 @@ export default function Dashboard() {
               <UncompletedTasksChartByDay />
             </CardContent>
           </Card>
-          <Card className="w-full flex-grow-1 hover:bg-gray-50">
+          <Card className="w-full flex-grow-1 hover:bg-gray-50 dark:hover:bg-gray-800">
             <CardHeader>
               <CardTitle>Masz łącznie</CardTitle>
             </CardHeader>
@@ -180,13 +180,13 @@ export default function Dashboard() {
               isDuringTaskListLoading && <LoadingSpinner />
             }
           </div>
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 flex gap-2">
+          <div className="fixed bottom-0 left-0 right-0 bg-white-900 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 dark:bg-gray-600 p-3 flex gap-2">
             <Input
               type="text"
               placeholder="Nazwa nowej listy..."
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              className="flex-1"
+              className="flex-1 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"
             />
             <Button
               className="px-3"
@@ -201,7 +201,7 @@ export default function Dashboard() {
               }}
               disabled={newListName.length <= 2}
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-4 w-4 dark:text-gray-400" />
             </Button>
           </div>
         </div>

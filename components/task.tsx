@@ -24,6 +24,7 @@ interface TaskComponentProps {
 
 export default function TaskComponent(props: TaskComponentProps) {
     const [user, setUser] = useState(null);
+    const isDark = localStorage.getItem('appMode') === 'dark';
     const [isCompleted, setIsCompleted] = useState(false);
     const [displayText, setDisplayText] = useState('');
     const [isOverdue, setIsOverdue] = useState(false);
@@ -31,7 +32,7 @@ export default function TaskComponent(props: TaskComponentProps) {
     const [isDuringCheckboxChange, setIsDuringCheckboxChange] = useState(false);
     const [offset, setOffset] = useState(0);
     const [opacity, setOpacity] = useState(1);
-    const [bgColor, setBgColor] = useState('rgb(255, 255, 255)');
+    const [bgColor, setBgColor] = useState(isDark ? 'rgb(0,0,0)' : 'rgb(255, 255, 255)');
     const [isDeleting, setIsDeleting] = useState(false);
     const router = useRouter();
 
@@ -138,7 +139,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                     const blue = Math.floor(255 * (1 - colorProgress));
                     setBgColor(`rgb(${red}, ${green}, ${blue})`);
                 } else {
-                    setBgColor('rgb(255, 255, 255)');
+                    setBgColor(isDark ? 'rgb(0,0,0)' : 'rgb(255, 255, 255)');
                 }
             }
         },
@@ -147,7 +148,7 @@ export default function TaskComponent(props: TaskComponentProps) {
             if (offset > maxSwipe / 1.25) {
                 setOffset(0);
                 setOpacity(1);
-                setBgColor('rgb(255, 255, 255)');
+                setBgColor(isDark ? 'rgb(0,0,0)' : 'rgb(255, 255, 255)');
             } else {
                 setIsDeleting(true);
                 try {
@@ -155,7 +156,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                 } catch (error) {
                     setOffset(0);
                     setOpacity(1);
-                    setBgColor('rgb(255, 255, 255)');
+                    setBgColor(isDark ? 'rgb(0,0,0)' : 'rgb(255, 255, 255)');
                 }
                 setIsDeleting(false);
             }
@@ -183,7 +184,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                         if ((e.target as HTMLInputElement).type !== "button")
                             router.push(`/dashboard/task/${task.id}`);
                     }}
-                    className={`cursor-pointer bg-white-500 hover:bg-gray-50 shadow-md`}
+                    className={`cursor-pointer bg-white-900 hover:bg-gray-50 hover:dark:bg-gray-700 dark:bg-black-900 shadow-md transition-colors`}
                     style={{ backgroundColor: isMobile ? bgColor : undefined }}
                 >
                     {task && (
@@ -191,18 +192,21 @@ export default function TaskComponent(props: TaskComponentProps) {
                             <CardHeader className={"flex flex-row gap-2 items-center justify-start md:justify-between"}>
                                 <Container className="gap-3 flex items-center justify-between lg:justify-start">
                                     <Checkbox
-                                        className={"rounded-full w-[40px] h-[40px] lg:w-[30px] lg:h-[30px] border-black-500"}
+                                        className={"rounded-full w-[40px] h-[40px] lg:w-[30px] lg:h-[30px] border-black-900"}
                                         checked={isCompleted}
                                         onCheckedChange={handleCheckboxChange}
                                     />
-                                    <Label className="text-xl lg:text-md m-0 text-right lg:text-left">{task.title}</Label>
+                                    <Label className="text-xl lg:text-md m-0 text-right lg:text-left dark:text-white">{task.title}</Label>
                                 </Container>
                                 {
                                     !isMobile &&
                                     <Container className="flex gap-3 items-center justify-end">
-                                        <Label className={"text-md text-gray-400 m-0" + `${isOverdue ? " text-red-600" : ""}`}>{displayText}</Label>
+                                        <Label className={`text-md ${isOverdue ? "text-red-600 dark:text-red-400" : "text-gray-400 dark:text-gray-300"} m-0`}>
+                                            {displayText}
+                                        </Label>
                                         <Button
-                                            className={`${(isCompleted || isOverdue) && !isMobile ? "text-gray-800 hover:text-gray-800" : ""} ${isMobile ? "text-gray-0 pointer-events-none px-3" : ""}`}
+                                            className={`${(isCompleted || isOverdue) ? "text-gray-800 dark:text-gray-200 hover:text-gray-800 hover:dark:text-white" : ""} 
+                                                      ${isMobile ? "text-gray-0 dark:text-gray-200 pointer-events-none px-3" : ""}`}
                                             type="button"
                                             variant="ghost"
                                             onClick={isMobile ? undefined : handleDelete}
@@ -212,7 +216,7 @@ export default function TaskComponent(props: TaskComponentProps) {
                                     </Container>
                                 }
                             </CardHeader>
-                            <CardContent className="flex text-gray-500 items-center justify-start">
+                            <CardContent className="flex text-gray-500 dark:text-gray-300 items-center justify-start">
                                 <Label>{task.description}</Label>
                             </CardContent>
                         </>
