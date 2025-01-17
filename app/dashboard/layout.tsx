@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider } from "@/components/ui/sidebar";
 import { Skeleton } from '@/components/ui/skeleton';
 import { TaskLists } from "@/lib/models/taskList";
 import { User as DbUser } from '@/lib/models/users';
@@ -25,8 +25,6 @@ interface LayoutProps {
     children: ReactNode;
 }
 
-const SIDEBAR_STORAGE_NAME = 'sidebarState';
-
 type IsDuringDeleteListType = {
     isDeleting: boolean;
     id: number | null;
@@ -37,7 +35,6 @@ export default function Layout({ children }: LayoutProps) {
     const [loading, setLoading] = useState(true);
     const [dbUser, setDbUser] = useState<DbUser | null>(null);
     const [taskList, setTaskList] = useState<TaskLists>([]);
-    const [defaultOpen, setDefaultOpen] = useState<boolean>(true);
     const [isAddingNewList, setIsAddingNewList] = useState<boolean>(false);
     const [isSidebarLoaded, setIsSidebarLoaded] = useState(false);
     const [newListName, setNewListName] = useState<string>('');
@@ -111,10 +108,6 @@ export default function Layout({ children }: LayoutProps) {
             document.removeEventListener('keydown', handleKeyDown);
         };
     }, [isAddingNewList, newListName]);
-
-    useEffect(() => {
-        setDefaultOpen(Boolean(localStorage.getItem(SIDEBAR_STORAGE_NAME)));
-    }, []);
 
     useEffect(() => {
         const fetchDbUser = async () => {
@@ -262,14 +255,10 @@ export default function Layout({ children }: LayoutProps) {
         }
     }
 
-    const handleOpenSidebar = (open: boolean) => {
-        localStorage.setItem(SIDEBAR_STORAGE_NAME, open ? 'true' : 'false');
-    }
-
     if (!LayoutManager.getIsMobile()) {
         return (
             <div>
-                <SidebarProvider className='flex flex-row justify-between' defaultOpen={Boolean(defaultOpen)} onOpenChange={handleOpenSidebar}>
+                <SidebarProvider className='flex flex-row justify-between' defaultOpen={true}>
                     <Sidebar className="max-h-[100vh] w-[20%] dark:bg-gray-900" onLoad={() => setIsSidebarLoaded(true)}>
                         <SidebarContent className="flex flex-col h-full">
                             <SidebarGroup className="flex flex-col flex-1">
@@ -388,7 +377,6 @@ export default function Layout({ children }: LayoutProps) {
                         </SidebarFooter>
                     </Sidebar>
                     <main className="w-[80%] h-full max-h-100">
-                        <SidebarTrigger className='hidden' size="lg" />
                         {children}
                     </main>
                 </SidebarProvider>
